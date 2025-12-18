@@ -53,10 +53,15 @@ class User extends Authenticatable
     {
         return $this->hasMany(ProcurementRequest::class);
     }
-    
+
     // Helper to check role
     public function hasRole($role)
     {
         return $this->role === $role;
+    }
+
+    public function adminlte_profile_url()
+    {
+        return route('profile.show');
     }
 }

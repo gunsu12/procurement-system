@@ -19,7 +19,7 @@ class ProcurementController extends Controller
     public function index(Request $request)
     {
         $user = Auth::user();
-        $query = ProcurementRequest::with('user', 'unit');
+        $query = ProcurementRequest::with('user', 'unit', 'items');
 
         // Isolation logic: Unit and Manager only see their own unit
         if (in_array($user->role, ['unit', 'manager'])) {
@@ -45,12 +45,18 @@ class ProcurementController extends Controller
         }
 
         $requests = $query->latest()->paginate(10);
-        
+
         $statuses = [
-            'submitted', 'approved_by_manager', 'approved_by_budgeting',
-            'approved_by_dir_company', 'approved_by_fin_mgr_holding',
-            'approved_by_fin_dir_holding', 'approved_by_gen_dir_holding',
-            'processing', 'completed', 'rejected'
+            'submitted',
+            'approved_by_manager',
+            'approved_by_budgeting',
+            'approved_by_dir_company',
+            'approved_by_fin_mgr_holding',
+            'approved_by_fin_dir_holding',
+            'approved_by_gen_dir_holding',
+            'processing',
+            'completed',
+            'rejected'
         ];
 
         // Pass units for filter if user is not restricted
@@ -115,10 +121,83 @@ class ProcurementController extends Controller
         return redirect()->route('procurement.index')->with('success', 'Request created successfully.');
     }
 
+    public function edit(ProcurementRequest $procurement)
+    {
+        $user = Auth::user();
+
+        // Only owner can edit, and only if status is submitted
+        if ($procurement->user_id != $user->id) {
+            abort(403, 'Unauthorized access.');
+        }
+
+        if ($procurement->status != 'submitted') {
+            return redirect()->route('procurement.show', $procurement->hashid)->with('error', 'Only submitted requests can be edited.');
+        }
+
+        $procurement->load('items');
+        return view('procurement.edit', compact('procurement'));
+    }
+
+    public function update(Request $request, ProcurementRequest $procurement)
+    {
+        $user = Auth::user();
+
+        if ($procurement->user_id != $user->id || $procurement->status != 'submitted') {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $validated = $request->validate([
+            'items' => 'required|array',
+            'items.*.name' => 'required|string',
+            'items.*.quantity' => 'required|integer|min:1',
+            'items.*.estimated_price' => 'required|numeric|min:0',
+            'items.*.unit' => 'required|string',
+            'notes' => 'nullable|string|max:1000',
+            'request_type' => 'required|in:aset,nonaset',
+            'is_medical' => 'nullable|boolean',
+            'is_cito' => 'nullable|boolean',
+            'cito_reason' => 'required_if:is_cito,1|nullable|string|max:1000',
+            'document' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png|max:10240',
+        ]);
+
+        DB::transaction(function () use ($request, $procurement) {
+            $path = $procurement->document_path;
+            if ($request->hasFile('document')) {
+                $path = $request->file('document')->store('documents', 'public');
+            }
+
+            $procurement->update([
+                'notes' => $request->notes,
+                'request_type' => $request->request_type,
+                'is_medical' => $request->has('is_medical') ? true : false,
+                'is_cito' => $request->has('is_cito') ? true : false,
+                'cito_reason' => $request->is_cito ? $request->cito_reason : null,
+                'document_path' => $path,
+            ]);
+
+            // Sync items (delete and recreate for simplicity in this case)
+            $procurement->items()->delete();
+            foreach ($request->items as $item) {
+                $procurement->items()->create($item);
+            }
+
+            // Log update
+            $procurement->logs()->create([
+                'user_id' => Auth::id(),
+                'action' => 'updated',
+                'note' => 'Request updated by user',
+                'status_before' => $procurement->status,
+                'status_after' => $procurement->status,
+            ]);
+        });
+
+        return redirect()->route('procurement.index')->with('success', 'Request updated successfully.');
+    }
+
     public function show(ProcurementRequest $procurement)
     {
         $user = Auth::user();
-        
+
         // Authorization check: Unit and Manager cannot see other units' data
         if (in_array($user->role, ['unit', 'manager']) && $procurement->unit_id != $user->unit_id) {
             abort(403, 'Unauthorized access to this procurement request.');
@@ -133,7 +212,7 @@ class ProcurementController extends Controller
         // Validation role vs status logic here
         $user = Auth::user();
         $nextStatus = $this->getNextStatus($procurement->status, $user->role);
-        
+
         if (!$nextStatus) {
             return back()->with('error', 'Unauthorized action for this status.');
         }

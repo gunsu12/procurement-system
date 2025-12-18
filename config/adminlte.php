@@ -138,7 +138,7 @@ return [
     'usermenu_header_class' => 'bg-primary',
     'usermenu_image' => false,
     'usermenu_desc' => false,
-    'usermenu_profile_url' => false,
+    'usermenu_profile_url' => true,
 
     /*
     |--------------------------------------------------------------------------
@@ -347,34 +347,34 @@ return [
             'route' => 'reports.outstanding',
             'icon' => 'fas fa-fw fa-clock',
         ],
-        ['header' => 'MASTER DATA'],
+        ['header' => 'MASTER DATA', 'can' => 'admin-only'],
         [
             'text' => 'Divisions',
-            'url' => '#',
+            'route' => 'divisions.index',
             'icon' => 'fas fa-fw fa-sitemap',
-            // 'route' => 'divisions.index',
+            'can' => 'admin-only',
         ],
         [
             'text' => 'Units',
-            'url' => '#',
+            'route' => 'units.index',
             'icon' => 'fas fa-fw fa-users',
-            // 'route' => 'units.index',
+            'can' => 'admin-only',
         ],
         [
             'text' => 'Users',
-            'url' => '#',
+            'route' => 'users.index',
             'icon' => 'fas fa-fw fa-user-cog',
-            // 'route' => 'users.index',
+            'can' => 'admin-only',
         ],
         ['header' => 'ACCOUNT_SETTINGS'],
         [
             'text' => 'profile',
-            'url' => '#',
+            'route' => 'profile.show',
             'icon' => 'fas fa-fw fa-user',
         ],
         [
             'text' => 'change_password',
-            'url' => '#',
+            'route' => 'profile.password',
             'icon' => 'fas fa-fw fa-lock',
         ],
     ],

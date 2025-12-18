@@ -23,4 +23,9 @@ class ProcurementItem extends Model
     {
         return $this->belongsTo(ProcurementRequest::class);
     }
+
+    public function getSubtotalAttribute()
+    {
+        return $this->quantity * $this->estimated_price;
+    }
 }

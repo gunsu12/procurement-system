@@ -44,11 +44,11 @@ class ProcurementRequest extends Model
     public function resolveRouteBinding($value, $field = null)
     {
         $decoded = \Hashids::decode($value);
-        
+
         if (empty($decoded)) {
             abort(404);
         }
-        
+
         return $this->where('id', $decoded[0])->firstOrFail();
     }
 
@@ -62,7 +62,7 @@ class ProcurementRequest extends Model
             $nextNum = 1;
             if ($last) {
                 $parts = explode('/', $last->code);
-                $nextNum = (int)end($parts) + 1;
+                $nextNum = (int) end($parts) + 1;
             }
             $model->code = $prefix . str_pad($nextNum, 5, '0', STR_PAD_LEFT);
         });
@@ -86,5 +86,12 @@ class ProcurementRequest extends Model
     public function logs()
     {
         return $this->hasMany(RequestLog::class)->latest();
+    }
+
+    public function getTotalAmountAttribute()
+    {
+        return $this->items->sum(function ($item) {
+            return $item->quantity * $item->estimated_price;
+        });
     }
 }
