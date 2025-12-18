@@ -14,9 +14,43 @@ class ProcurementRequest extends Model
         'user_id',
         'unit_id',
         'status',
-        'manager_nominal',
+        'notes',
+        'request_type',
+        'is_medical',
+        'is_cito',
+        'cito_reason',
         'document_path'
     ];
+
+    /**
+     * Get the route key for the model.
+     */
+    public function getRouteKeyName()
+    {
+        return 'hashid';
+    }
+
+    /**
+     * Get the hashid attribute.
+     */
+    public function getHashidAttribute()
+    {
+        return \Hashids::encode($this->id);
+    }
+
+    /**
+     * Resolve route binding for hashid.
+     */
+    public function resolveRouteBinding($value, $field = null)
+    {
+        $decoded = \Hashids::decode($value);
+        
+        if (empty($decoded)) {
+            abort(404);
+        }
+        
+        return $this->where('id', $decoded[0])->firstOrFail();
+    }
 
     public static function boot()
     {

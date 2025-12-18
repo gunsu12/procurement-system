@@ -18,7 +18,14 @@ class ReportController extends Controller
 
     public function unit(Request $request)
     {
+        $user = \Auth::user();
         $unitId = $request->input('unit_id');
+
+        // Isolation logic for Report: restricted roles forced to their own unit
+        if (in_array($user->role, ['unit', 'manager'])) {
+            $unitId = $user->unit_id;
+        }
+
         $requests = \App\Models\ProcurementRequest::with('unit', 'user')
             ->when($unitId, function($q) use ($unitId) {
                 return $q->where('unit_id', $unitId);
@@ -26,25 +33,30 @@ class ReportController extends Controller
             ->latest()
             ->get();
             
-        $units = \App\Models\Unit::all();
+        // Admin roles see all units to filter, Unit roles see only theirs in the dropdown
+        $units = in_array($user->role, ['unit', 'manager']) 
+            ? \App\Models\Unit::where('id', $user->unit_id)->get() 
+            : \App\Models\Unit::all();
         
         return view('reports.unit', compact('requests', 'units', 'unitId'));
     }
 
     public function outstanding()
     {
-        // "Outstanding purchasing > 7 days"
-        // Requests that are currently in 'processing' (Purchasing stage) or ready for purchasing
-        // and have been in that state or created > 7 days ago?
-        // Let's assume "Not Completed" and created > 7 days ago
-        
+        $user = \Auth::user();
         $dateLimit = now()->subDays(7);
         
-        $requests = \App\Models\ProcurementRequest::with('unit', 'items')
+        $query = \App\Models\ProcurementRequest::with('unit', 'items')
             ->where('status', '!=', 'completed')
             ->where('status', '!=', 'rejected')
-            ->where('created_at', '<=', $dateLimit)
-            ->get();
+            ->where('created_at', '<=', $dateLimit);
+
+        // Isolation logic for Outstanding Report: restricted roles see only their unit
+        if (in_array($user->role, ['unit', 'manager'])) {
+            $query->where('unit_id', $user->unit_id);
+        }
+
+        $requests = $query->latest()->get();
 
         return view('reports.outstanding', compact('requests'));
     }

@@ -21,18 +21,18 @@ class ProcurementController extends Controller
         $user = Auth::user();
         $query = ProcurementRequest::with('user', 'unit');
 
-        if ($user->role == 'unit') {
-            $query->where('unit_id', $user->unit_id); // Own unit requests
-        } elseif ($user->role == 'manager') {
-            $query->where('unit_id', $user->unit_id); // Manager sees only their unit
-        } elseif (in_array($user->role, ['budgeting', 'purchasing'])) {
-             // See all or filtered? Usually all active ones for budgeting/purchasing
-        } else {
-             // Directors see all
+        // Isolation logic: Unit and Manager only see their own unit
+        if (in_array($user->role, ['unit', 'manager'])) {
+            $query->where('unit_id', $user->unit_id);
+        }
+
+        // Filter by unit (for roles that can see multiple units, e.g., budgeting, purchasing, directors)
+        if ($request->filled('unit_id') && !in_array($user->role, ['unit', 'manager'])) {
+            $query->where('unit_id', $request->unit_id);
         }
 
         // Filter by status
-        if ($request->has('status') && $request->status != '') {
+        if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
 
@@ -53,7 +53,10 @@ class ProcurementController extends Controller
             'processing', 'completed', 'rejected'
         ];
 
-        return view('procurement.index', compact('requests', 'statuses'));
+        // Pass units for filter if user is not restricted
+        $units = !in_array($user->role, ['unit', 'manager']) ? \App\Models\Unit::all() : collect();
+
+        return view('procurement.index', compact('requests', 'statuses', 'units'));
     }
 
     public function create()
@@ -67,8 +70,13 @@ class ProcurementController extends Controller
             'items' => 'required|array',
             'items.*.name' => 'required|string',
             'items.*.quantity' => 'required|integer|min:1',
+            'items.*.estimated_price' => 'required|numeric|min:0',
             'items.*.unit' => 'required|string',
-            'manager_nominal' => 'required|numeric',
+            'notes' => 'nullable|string|max:1000',
+            'request_type' => 'required|in:aset,nonaset',
+            'is_medical' => 'nullable|boolean',
+            'is_cito' => 'nullable|boolean',
+            'cito_reason' => 'required_if:is_cito,1|nullable|string|max:1000',
             'document' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png|max:10240',
         ]);
 
@@ -82,7 +90,11 @@ class ProcurementController extends Controller
                 'user_id' => Auth::id(),
                 'unit_id' => Auth::user()->unit_id,
                 'status' => 'submitted', // Initial status
-                'manager_nominal' => $request->manager_nominal,
+                'notes' => $request->notes,
+                'request_type' => $request->request_type,
+                'is_medical' => $request->has('is_medical') ? true : false,
+                'is_cito' => $request->has('is_cito') ? true : false,
+                'cito_reason' => $request->is_cito ? $request->cito_reason : null,
                 'document_path' => $path,
             ]);
 
@@ -105,6 +117,13 @@ class ProcurementController extends Controller
 
     public function show(ProcurementRequest $procurement)
     {
+        $user = Auth::user();
+        
+        // Authorization check: Unit and Manager cannot see other units' data
+        if (in_array($user->role, ['unit', 'manager']) && $procurement->unit_id != $user->unit_id) {
+            abort(403, 'Unauthorized access to this procurement request.');
+        }
+
         $procurement->load('items', 'logs.user');
         return view('procurement.show', compact('procurement'));
     }

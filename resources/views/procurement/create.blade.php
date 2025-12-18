@@ -13,8 +13,56 @@
                 <form action="{{ route('procurement.store') }}" method="POST" id="createForm" enctype="multipart/form-data">
                     @csrf
                     <div class="form-group mb-3">
-                        <label>Nominal Manager Requirement</label>
-                        <input type="number" name="manager_nominal" class="form-control" required>
+                        <label>Catatan / Notes</label>
+                        <textarea name="notes" class="form-control" rows="3"
+                            placeholder="Catatan tambahan untuk permohonan ini (opsional)"></textarea>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label>Tipe Permohonan <span class="text-danger">*</span></label>
+                                <select name="request_type" class="form-control" required>
+                                    <option value="">-- Pilih Tipe --</option>
+                                    <option value="aset">Aset</option>
+                                    <option value="nonaset">Non Aset</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label>Kategori</label>
+                                <div class="form-check mt-2">
+                                    <input class="form-check-input" type="checkbox" name="is_medical" id="isMedical"
+                                        value="1">
+                                    <label class="form-check-label" for="isMedical">
+                                        Medis
+                                    </label>
+                                </div>
+                                <small class="text-muted">Centang jika permohonan ini untuk keperluan medis</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card card-warning mb-3">
+                        <div class="card-header">
+                            <h3 class="card-title"><i class="fas fa-exclamation-triangle"></i> Permohonan CITO (Urgent)</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="checkbox" name="is_cito" id="isCito"
+                                    value="1">
+                                <label class="form-check-label" for="isCito">
+                                    <strong>Tandai sebagai CITO (Urgent)</strong>
+                                </label>
+                            </div>
+                            <div class="form-group" id="citoReasonGroup" style="display: none;">
+                                <label>Alasan CITO <span class="text-danger">*</span></label>
+                                <textarea name="cito_reason" id="citoReason" class="form-control" rows="3"
+                                    placeholder="Jelaskan alasan mengapa permohonan ini bersifat urgent/cito..."></textarea>
+                                <small class="text-muted">Wajib diisi jika permohonan ditandai sebagai CITO</small>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="form-group mb-3">
@@ -30,6 +78,7 @@
                                 <th>Name</th>
                                 <th>Spec</th>
                                 <th>Qty</th>
+                                <th>Est. Price</th>
                                 <th>Unit</th>
                                 <th>Budget Info</th>
                                 <th><button type="button" class="btn btn-sm btn-success" id="addItem">+</button></th>
@@ -39,12 +88,21 @@
                             <tr>
                                 <td><input type="text" name="items[0][name]" class="form-control" required></td>
                                 <td><input type="text" name="items[0][specification]" class="form-control"></td>
-                                <td><input type="number" name="items[0][quantity]" class="form-control" required></td>
+                                <td><input type="number" name="items[0][quantity]" class="form-control item-qty" required>
+                                </td>
+                                <td><input type="number" name="items[0][estimated_price]" class="form-control item-price"
+                                        step="0.01" required></td>
                                 <td><input type="text" name="items[0][unit]" class="form-control" required></td>
                                 <td><input type="text" name="items[0][budget_info]" class="form-control"></td>
                                 <td></td>
                             </tr>
                         </tbody>
+                        <tfoot>
+                            <tr class="table-info">
+                                <td colspan="3" class="text-right"><strong>Total Pengajuan:</strong></td>
+                                <td colspan="4"><strong id="totalAmount">Rp 0</strong></td>
+                            </tr>
+                        </tfoot>
                     </table>
 
                     <button type="submit" class="btn btn-primary">Submit Request</button>
@@ -57,12 +115,28 @@
 @section('js')
     <script>
         let itemIndex = 1;
+
+        // Calculate total
+        function calculateTotal() {
+            let total = 0;
+            $('.item-price').each(function() {
+                let price = parseFloat($(this).val()) || 0;
+                total += price;
+            });
+            $('#totalAmount').text('Rp ' + total.toLocaleString('id-ID', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }));
+        }
+
+        // Add item row
         $('#addItem').click(function() {
             let html = `<tr>
             <td><input type="text" name="items[${itemIndex}][name]" class="form-control" required></td>
             <td><input type="text" name="items[${itemIndex}][specification]" class="form-control"></td>
-            <td><input type="number" name="items[${itemIndex}][quantity]" class="form-control" required></td>
-            <td><input type="text" name="items[0][unit]" class="form-control" required></td>
+            <td><input type="number" name="items[${itemIndex}][quantity]" class="form-control item-qty" required></td>
+            <td><input type="number" name="items[${itemIndex}][estimated_price]" class="form-control item-price" step="0.01" required></td>
+            <td><input type="text" name="items[${itemIndex}][unit]" class="form-control" required></td>
             <td><input type="text" name="items[${itemIndex}][budget_info]" class="form-control"></td>
             <td><button type="button" class="btn btn-danger btn-sm remove-row">x</button></td>
         </tr>`;
@@ -70,8 +144,36 @@
             itemIndex++;
         });
 
+        // Remove row
         $(document).on('click', '.remove-row', function() {
             $(this).closest('tr').remove();
+            calculateTotal();
+        });
+
+        // Auto calculate on price change
+        $(document).on('input', '.item-price', function() {
+            calculateTotal();
+        });
+
+        // CITO checkbox toggle
+        $('#isCito').change(function() {
+            if ($(this).is(':checked')) {
+                $('#citoReasonGroup').slideDown();
+                $('#citoReason').prop('required', true);
+            } else {
+                $('#citoReasonGroup').slideUp();
+                $('#citoReason').prop('required', false).val('');
+            }
+        });
+
+        // Form validation
+        $('#createForm').submit(function(e) {
+            if ($('#isCito').is(':checked') && !$('#citoReason').val().trim()) {
+                e.preventDefault();
+                alert('Alasan CITO wajib diisi jika permohonan ditandai sebagai CITO!');
+                $('#citoReason').focus();
+                return false;
+            }
         });
     </script>
 @stop

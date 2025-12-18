@@ -15,6 +15,18 @@
         <div class="card mb-3">
             <div class="card-body">
                 <form action="{{ route('procurement.index') }}" method="GET" class="form-inline">
+                    @if ($units->count() > 0)
+                        <label class="mr-2">Unit:</label>
+                        <select name="unit_id" class="form-control mr-3">
+                            <option value="">All Units</option>
+                            @foreach ($units as $u)
+                                <option value="{{ $u->id }}" {{ request('unit_id') == $u->id ? 'selected' : '' }}>
+                                    {{ $u->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    @endif
+
                     <label class="mr-2">Status:</label>
                     <select name="status" class="form-control mr-3">
                         <option value="">All Statuses</option>
@@ -57,7 +69,7 @@
                                 <td>{{ $req->unit->name }}</td>
                                 <td><span class="badge bg-secondary">{{ $req->status }}</span></td>
                                 <td>
-                                    <a href="{{ route('procurement.show', $req->id) }}"
+                                    <a href="{{ route('procurement.show', $req->hashid) }}"
                                         class="btn btn-sm btn-info">View</a>
                                 </td>
                             </tr>
