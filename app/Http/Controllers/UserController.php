@@ -16,13 +16,14 @@ class UserController extends Controller
 
     public function index()
     {
-        $users = User::with('unit')->paginate(10);
+        $users = User::with('unit', 'company')->paginate(10);
         return view('users.index', compact('users'));
     }
 
     public function create()
     {
         $units = Unit::all();
+        $companies = \App\Models\Company::all();
         $roles = [
             'super_admin' => 'Super Admin',
             'unit' => 'Unit',
@@ -34,7 +35,7 @@ class UserController extends Controller
             'general_director_holding' => 'General Director Holding',
             'purchasing' => 'Purchasing',
         ];
-        return view('users.create', compact('units', 'roles'));
+        return view('users.create', compact('units', 'roles', 'companies'));
     }
 
     public function store(Request $request)
@@ -45,6 +46,7 @@ class UserController extends Controller
             'password' => 'required|string|min:8|confirmed',
             'role' => 'required|string',
             'unit_id' => 'nullable|exists:units,id',
+            'company_id' => 'required|exists:companies,id',
         ]);
 
         User::create([
@@ -53,6 +55,7 @@ class UserController extends Controller
             'password' => Hash::make($request->password),
             'role' => $request->role,
             'unit_id' => $request->unit_id,
+            'company_id' => $request->company_id,
         ]);
 
         return redirect()->route('users.index')->with('success', 'User created successfully.');
@@ -61,6 +64,7 @@ class UserController extends Controller
     public function edit(User $user)
     {
         $units = Unit::all();
+        $companies = \App\Models\Company::all();
         $roles = [
             'super_admin' => 'Super Admin',
             'unit' => 'Unit',
@@ -72,7 +76,7 @@ class UserController extends Controller
             'general_director_holding' => 'General Director Holding',
             'purchasing' => 'Purchasing',
         ];
-        return view('users.edit', compact('user', 'units', 'roles'));
+        return view('users.edit', compact('user', 'units', 'roles', 'companies'));
     }
 
     public function update(Request $request, User $user)
@@ -83,6 +87,7 @@ class UserController extends Controller
             'password' => 'nullable|string|min:8|confirmed',
             'role' => 'required|string',
             'unit_id' => 'nullable|exists:units,id',
+            'company_id' => 'required|exists:companies,id',
         ]);
 
         $data = [
@@ -90,6 +95,7 @@ class UserController extends Controller
             'email' => $request->email,
             'role' => $request->role,
             'unit_id' => $request->unit_id,
+            'company_id' => $request->company_id,
         ];
 
         if ($request->filled('password')) {

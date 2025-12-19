@@ -349,6 +349,12 @@ return [
         ],
         ['header' => 'MASTER DATA', 'can' => 'admin-only'],
         [
+            'text' => 'Companies',
+            'route' => 'companies.index',
+            'icon' => 'fas fa-fw fa-hospital',
+            'can' => 'admin-only',
+        ],
+        [
             'text' => 'Divisions',
             'route' => 'divisions.index',
             'icon' => 'fas fa-fw fa-sitemap',

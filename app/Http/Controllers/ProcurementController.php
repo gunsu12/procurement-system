@@ -19,15 +19,28 @@ class ProcurementController extends Controller
     public function index(Request $request)
     {
         $user = Auth::user();
-        $query = ProcurementRequest::with('user', 'unit', 'items');
+        $query = ProcurementRequest::with('user', 'unit', 'company', 'items');
 
-        // Isolation logic: Unit and Manager only see their own unit
-        if (in_array($user->role, ['unit', 'manager'])) {
-            $query->where('unit_id', $user->unit_id);
+        // Isolation logic based on Company
+        $holdingRoles = ['finance_manager_holding', 'finance_director_holding', 'general_director_holding', 'super_admin'];
+
+        if (!in_array($user->role, $holdingRoles)) {
+            // Non-holding roles only see their own company
+            $query->where('company_id', $user->company_id);
+
+            // Further isolation: Unit and Manager only see their own unit
+            if (in_array($user->role, ['unit', 'manager'])) {
+                $query->where('unit_id', $user->unit_id);
+            }
         }
 
-        // Filter by unit (for roles that can see multiple units, e.g., budgeting, purchasing, directors)
-        if ($request->filled('unit_id') && !in_array($user->role, ['unit', 'manager'])) {
+        // Filter by company (for holding roles)
+        if ($request->filled('company_id') && in_array($user->role, $holdingRoles)) {
+            $query->where('company_id', $request->company_id);
+        }
+
+        // Filter by unit
+        if ($request->filled('unit_id')) {
             $query->where('unit_id', $request->unit_id);
         }
 
@@ -59,10 +72,16 @@ class ProcurementController extends Controller
             'rejected'
         ];
 
-        // Pass units for filter if user is not restricted
-        $units = !in_array($user->role, ['unit', 'manager']) ? \App\Models\Unit::all() : collect();
+        // Pass selection data for filters
+        if (in_array($user->role, $holdingRoles)) {
+            $units = \App\Models\Unit::with('company')->get();
+            $companies = \App\Models\Company::all();
+        } else {
+            $units = \App\Models\Unit::where('company_id', $user->company_id)->get();
+            $companies = collect();
+        }
 
-        return view('procurement.index', compact('requests', 'statuses', 'units'));
+        return view('procurement.index', compact('requests', 'statuses', 'units', 'companies'));
     }
 
     public function create()
@@ -92,9 +111,11 @@ class ProcurementController extends Controller
                 $path = $request->file('document')->store('documents', 'public');
             }
 
+            $user = Auth::user();
             $procurement = ProcurementRequest::create([
-                'user_id' => Auth::id(),
-                'unit_id' => Auth::user()->unit_id,
+                'user_id' => $user->id,
+                'unit_id' => $user->unit_id,
+                'company_id' => $user->company_id,
                 'status' => 'submitted', // Initial status
                 'notes' => $request->notes,
                 'request_type' => $request->request_type,
@@ -110,7 +131,7 @@ class ProcurementController extends Controller
 
             // Log
             $procurement->logs()->create([
-                'user_id' => Auth::id(),
+                'user_id' => $user->id,
                 'action' => 'submitted',
                 'note' => 'Initial submission',
                 'status_before' => 'draft',
@@ -197,13 +218,22 @@ class ProcurementController extends Controller
     public function show(ProcurementRequest $procurement)
     {
         $user = Auth::user();
+        $holdingRoles = ['finance_manager_holding', 'finance_director_holding', 'general_director_holding', 'super_admin'];
 
-        // Authorization check: Unit and Manager cannot see other units' data
-        if (in_array($user->role, ['unit', 'manager']) && $procurement->unit_id != $user->unit_id) {
-            abort(403, 'Unauthorized access to this procurement request.');
+        // Authorization check
+        if (!in_array($user->role, $holdingRoles)) {
+            // Non-holding users must be in the same company
+            if ($procurement->company_id != $user->company_id) {
+                abort(403, 'Unauthorized access to this procurement request.');
+            }
+
+            // Unit and Manager cannot see other units' data within the same company
+            if (in_array($user->role, ['unit', 'manager']) && $procurement->unit_id != $user->unit_id) {
+                abort(403, 'Unauthorized access to this procurement request.');
+            }
         }
 
-        $procurement->load('items', 'logs.user');
+        $procurement->load('items', 'logs.user', 'company', 'unit');
         return view('procurement.show', compact('procurement'));
     }
 
@@ -253,15 +283,6 @@ class ProcurementController extends Controller
 
     private function getNextStatus($currentStatus, $role)
     {
-        // 1. unit -> submitted
-        // 2. manager -> approved_by_manager
-        // 3. budgeting -> approved_by_budgeting
-        // 4. director_company -> approved_by_dir_company
-        // 5. finance_mgr_holding -> approved_by_fin_mgr_holding
-        // 6. finance_dir_holding -> approved_by_fin_dir_holding
-        // 7. general_dir_holding -> approved_by_gen_dir_holding
-        // 8. purchasing -> processing -> completed
-
         $map = [
             'submitted' => ['manager' => 'approved_by_manager'],
             'approved_by_manager' => ['budgeting' => 'approved_by_budgeting'],

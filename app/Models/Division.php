@@ -9,7 +9,12 @@ class Division extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name'];
+    protected $fillable = ['name', 'company_id'];
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
 
     public function units()
     {

@@ -14,19 +14,21 @@ class DivisionController extends Controller
 
     public function index()
     {
-        $divisions = Division::paginate(10);
+        $divisions = Division::with('company')->paginate(10);
         return view('divisions.index', compact('divisions'));
     }
 
     public function create()
     {
-        return view('divisions.create');
+        $companies = \App\Models\Company::all();
+        return view('divisions.create', compact('companies'));
     }
 
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required|string|max:255|unique:divisions',
+            'name' => 'required|string|max:255',
+            'company_id' => 'required|exists:companies,id',
         ]);
 
         Division::create($request->all());
@@ -36,13 +38,15 @@ class DivisionController extends Controller
 
     public function edit(Division $division)
     {
-        return view('divisions.edit', compact('division'));
+        $companies = \App\Models\Company::all();
+        return view('divisions.edit', compact('division', 'companies'));
     }
 
     public function update(Request $request, Division $division)
     {
         $request->validate([
-            'name' => 'required|string|max:255|unique:divisions,name,' . $division->id,
+            'name' => 'required|string|max:255',
+            'company_id' => 'required|exists:companies,id',
         ]);
 
         $division->update($request->all());

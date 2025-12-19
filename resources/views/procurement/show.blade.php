@@ -41,10 +41,13 @@
                 </div>
                 <div class="card-body">
                     <div class="row mb-3">
-                        <div class="col-md-6">
+                        <div class="col-md-4">
+                            <p class="mb-2"><strong>Company:</strong> {{ $procurement->company->name ?? '-' }}</p>
+                        </div>
+                        <div class="col-md-4">
                             <p class="mb-2"><strong>Unit:</strong> {{ $procurement->unit->name }}</p>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <p class="mb-2"><strong>Requester:</strong> {{ $procurement->user->name }}</p>
                         </div>
                     </div>
@@ -195,12 +198,10 @@
                 <div class="card-body">
                     @php
                         $user = Auth::user();
-                        // Check if current user can approve based on status map (re-using logic or simple check)
                         $canApprove = false;
                         $role = $user->role;
                         $status = $procurement->status;
 
-                        // Map status to required role
                         $flow = [
                             'submitted' => 'manager',
                             'approved_by_manager' => 'budgeting',
@@ -212,12 +213,20 @@
                             'processing' => 'purchasing',
                         ];
 
-                        if (isset($flow[$status]) && $flow[$status] == $role) {
-                            // Validation for manager/unit scope
-                            if ($role == 'manager' && $user->unit_id != $procurement->unit_id) {
-                                $canApprove = false;
-                            } else {
+                        $holdingRoles = ['finance_manager_holding', 'finance_director_holding', 'general_director_holding', 'super_admin'];
+
+                        if (isset($flow[$status]) && ($flow[$status] == $role || $role == 'super_admin')) {
+                            if (in_array($role, $holdingRoles)) {
                                 $canApprove = true;
+                            } else {
+                                // Non-holding roles must be in the same company
+                                if ($user->company_id == $procurement->company_id) {
+                                    if ($role == 'manager') {
+                                        $canApprove = ($user->unit_id == $procurement->unit_id);
+                                    } else {
+                                        $canApprove = true;
+                                    }
+                                }
                             }
                         }
                     @endphp

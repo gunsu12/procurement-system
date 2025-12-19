@@ -5,20 +5,28 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Unit extends Model
+class Company extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'division_id', 'company_id'];
+    protected $fillable = [
+        'name',
+        'code',
+        'is_holding',
+    ];
 
-    public function company()
+    protected $casts = [
+        'is_holding' => 'boolean',
+    ];
+
+    public function divisions()
     {
-        return $this->belongsTo(Company::class);
+        return $this->hasMany(Division::class);
     }
 
-    public function division()
+    public function units()
     {
-        return $this->belongsTo(Division::class);
+        return $this->hasMany(Unit::class);
     }
 
     public function users()

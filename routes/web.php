@@ -41,6 +41,7 @@ Route::prefix('reports')->name('reports.')->group(function () {
 Route::resource('divisions', App\Http\Controllers\DivisionController::class);
 Route::resource('units', App\Http\Controllers\UnitController::class);
 Route::resource('users', App\Http\Controllers\UserController::class);
+Route::resource('companies', App\Http\Controllers\CompanyController::class);
 
 Route::get('/profile', [App\Http\Controllers\ProfileController::class, 'show'])->name('profile.show');
 Route::put('/profile', [App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');

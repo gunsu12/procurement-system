@@ -15,14 +15,15 @@ class UnitController extends Controller
 
     public function index()
     {
-        $units = Unit::with('division')->paginate(10);
+        $units = Unit::with('division', 'company')->paginate(10);
         return view('units.index', compact('units'));
     }
 
     public function create()
     {
         $divisions = Division::all();
-        return view('units.create', compact('divisions'));
+        $companies = \App\Models\Company::all();
+        return view('units.create', compact('divisions', 'companies'));
     }
 
     public function store(Request $request)
@@ -30,6 +31,7 @@ class UnitController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'division_id' => 'required|exists:divisions,id',
+            'company_id' => 'required|exists:companies,id',
         ]);
 
         Unit::create($request->all());
@@ -40,7 +42,8 @@ class UnitController extends Controller
     public function edit(Unit $unit)
     {
         $divisions = Division::all();
-        return view('units.edit', compact('unit', 'divisions'));
+        $companies = \App\Models\Company::all();
+        return view('units.edit', compact('unit', 'divisions', 'companies'));
     }
 
     public function update(Request $request, Unit $unit)
@@ -48,6 +51,7 @@ class UnitController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'division_id' => 'required|exists:divisions,id',
+            'company_id' => 'required|exists:companies,id',
         ]);
 
         $unit->update($request->all());

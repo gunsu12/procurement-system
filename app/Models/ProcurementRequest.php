@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Vinkla\Hashids\Facades\Hashids;
 
 class ProcurementRequest extends Model
 {
@@ -19,8 +20,14 @@ class ProcurementRequest extends Model
         'is_medical',
         'is_cito',
         'cito_reason',
-        'document_path'
+        'document_path',
+        'company_id'
     ];
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
 
     /**
      * Get the route key for the model.
@@ -35,7 +42,7 @@ class ProcurementRequest extends Model
      */
     public function getHashidAttribute()
     {
-        return \Hashids::encode($this->id);
+        return Hashids::encode($this->id);
     }
 
     /**
@@ -43,7 +50,7 @@ class ProcurementRequest extends Model
      */
     public function resolveRouteBinding($value, $field = null)
     {
-        $decoded = \Hashids::decode($value);
+        $decoded = Hashids::decode($value);
 
         if (empty($decoded)) {
             abort(404);
