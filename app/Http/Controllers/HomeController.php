@@ -23,6 +23,34 @@ class HomeController extends Controller
      */
     public function index()
     {
-        return view('home');
+        $user = \Illuminate\Support\Facades\Auth::user();
+        $query = \App\Models\ProcurementRequest::query();
+
+        // If unit/manager, only show their unit's stats
+        if (in_array($user->role, ['unit', 'manager'])) {
+            $query->where('unit_id', $user->unit_id);
+        }
+
+        $stats = $query->select('status', \Illuminate\Support\Facades\DB::raw('count(*) as total'))
+            ->groupBy('status')
+            ->get()
+            ->pluck('total', 'status')
+            ->toArray();
+
+        // Define all possible statuses to ensure they appear in dashboard even if 0
+        $allStatuses = [
+            'submitted' => 'Submitted',
+            'approved_by_manager' => 'Mgr Approved',
+            'approved_by_budgeting' => 'Budgeting Appr',
+            'approved_by_dir_company' => 'Dir Company Appr',
+            'approved_by_fin_mgr_holding' => 'Fin Mgr Holding Appr',
+            'approved_by_fin_dir_holding' => 'Fin Dir Holding Appr',
+            'approved_by_gen_dir_holding' => 'Gen Dir Holding Appr',
+            'processing' => 'Processing',
+            'completed' => 'Completed',
+            'rejected' => 'Rejected'
+        ];
+
+        return view('home', compact('stats', 'allStatuses'));
     }
 }

@@ -19,7 +19,7 @@ Route::get('/', function () {
 
 Auth::routes();
 
-Route::get('/home', [App\Http\Controllers\ProcurementController::class, 'index'])->name('home');
+Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 
 Route::prefix('procurement')->name('procurement.')->group(function () {
     Route::get('/', [App\Http\Controllers\ProcurementController::class, 'index'])->name('index');

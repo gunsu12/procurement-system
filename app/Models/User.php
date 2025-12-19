@@ -20,6 +20,7 @@ class User extends Authenticatable
     protected $fillable = [
         'name',
         'email',
+        'username',
         'password',
         'role',
         'unit_id',
@@ -53,6 +54,8 @@ class User extends Authenticatable
     {
         return $this->hasMany(ProcurementRequest::class);
     }
+
+
 
     // Helper to check role
     public function hasRole($role)

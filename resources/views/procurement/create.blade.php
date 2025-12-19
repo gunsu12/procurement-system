@@ -3,7 +3,17 @@
 @section('title', 'Create Request')
 
 @section('content_header')
-<h1>Create Procurement Request</h1>
+<div class="row mb-2">
+    <div class="col-sm-6">
+        <h1>Create Procurement Request</h1>
+    </div>
+    <div class="col-sm-6">
+        <ol class="breadcrumb float-sm-right">
+            <li class="breadcrumb-item"><a href="{{ route('home') }}" class="btn btn-default btn-sm"><i
+                        class="fas fa-arrow-left"></i> Back to Dashboard</a></li>
+        </ol>
+    </div>
+</div>
 @stop
 
 @section('content')
@@ -108,7 +118,10 @@
                     </tfoot>
                 </table>
 
-                <button type="submit" class="btn btn-primary">Submit Request</button>
+                <div class="d-flex justify-content-between">
+                    <a href="{{ route('procurement.index') }}" class="btn btn-secondary">Back</a>
+                    <button type="submit" class="btn btn-primary">Submit Request</button>
+                </div>
             </form>
         </div>
     </div>
