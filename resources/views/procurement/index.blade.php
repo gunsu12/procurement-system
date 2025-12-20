@@ -33,7 +33,7 @@
                     @if ($units->count() > 0)
                         <div class="col-md-3 mb-2">
                             <label>Unit</label>
-                            <select name="unit_id" class="form-control">
+                            <select name="unit_id" class="form-control" {{ !request('company_id') ? 'disabled' : '' }}>
                                 <option value="">All Units</option>
                                 @foreach ($units->groupBy('company.name') as $companyName => $companyUnits)
                                     <optgroup label="{{ $companyName ?: 'No Company' }}">
@@ -135,3 +135,47 @@
     </div>
 </div>
 @stop
+
+@push('js')
+    <script>
+        $(document).ready(function () {
+            var companySelect = $('select[name="company_id"]');
+            var unitSelect = $('select[name="unit_id"]');
+
+            // Initial check
+            if (!companySelect.val()) {
+                unitSelect.prop('disabled', true);
+            }
+
+            companySelect.on('change', function () {
+                var companyId = $(this).val();
+                var currentUnit = "{{ request('unit_id') }}";
+
+                if (!companyId) {
+                    unitSelect.prop('disabled', true);
+                    unitSelect.empty();
+                    unitSelect.append('<option value="">All Units</option>');
+                    return;
+                } else {
+                    unitSelect.prop('disabled', false);
+                }
+
+                $.ajax({
+                    url: "{{ route('ajax.units') }}",
+                    data: {
+                        company_id: companyId
+                    },
+                    success: function (units) {
+                        unitSelect.empty();
+                        unitSelect.append('<option value="">All Units</option>');
+
+                        $.each(units, function (key, unit) {
+                            var selected = (unit.id == currentUnit) ? 'selected' : '';
+                            unitSelect.append('<option value="' + unit.id + '" ' + selected + '>' + unit.name + '</option>');
+                        });
+                    }
+                });
+            });
+        });
+    </script>
+@endpush

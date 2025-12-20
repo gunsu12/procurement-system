@@ -36,9 +36,11 @@ Route::prefix('reports')->name('reports.')->group(function () {
     Route::get('/', [App\Http\Controllers\ReportController::class, 'index'])->name('index');
     Route::get('/unit', [App\Http\Controllers\ReportController::class, 'unit'])->name('unit');
     Route::get('/outstanding', [App\Http\Controllers\ReportController::class, 'outstanding'])->name('outstanding');
+    Route::get('/timeline', [App\Http\Controllers\ReportController::class, 'timeline'])->name('timeline');
 });
 
 Route::resource('divisions', App\Http\Controllers\DivisionController::class);
+Route::get('/ajax/units', [App\Http\Controllers\UnitController::class, 'getUnits'])->name('ajax.units');
 Route::resource('units', App\Http\Controllers\UnitController::class);
 Route::resource('users', App\Http\Controllers\UserController::class);
 Route::resource('companies', App\Http\Controllers\CompanyController::class);

@@ -82,4 +82,157 @@ class ReportController extends Controller
 
         return view('reports.outstanding', compact('requests'));
     }
+
+    public function timeline(Request $request)
+    {
+        $user = \Auth::user();
+        $holdingRoles = ['finance_manager_holding', 'finance_director_holding', 'general_director_holding', 'super_admin'];
+
+        $query = \App\Models\ProcurementRequest::with([
+            'logs' => function ($q) {
+                $q->orderBy('created_at', 'asc');
+            },
+            'logs.user',
+            'unit',
+            'company'
+        ]);
+
+        // Apply access control
+        if (!in_array($user->role, $holdingRoles)) {
+            $query->where('company_id', $user->company_id);
+
+            if (in_array($user->role, ['unit', 'manager'])) {
+                $query->where('unit_id', $user->unit_id);
+            }
+        }
+
+        // Apply filters
+        if ($request->filled('company_id') && in_array($user->role, $holdingRoles)) {
+            $query->where('company_id', $request->company_id);
+        }
+
+        if ($request->filled('unit_id')) {
+            $query->where('unit_id', $request->unit_id);
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->filled('start_date')) {
+            $query->whereDate('created_at', '>=', $request->start_date);
+        }
+
+        if ($request->filled('end_date')) {
+            $query->whereDate('created_at', '<=', $request->end_date);
+        }
+
+        $requests = $query->latest()->paginate(20);
+
+        // Calculate timeline data for each request
+        foreach ($requests as $req) {
+            $req->timeline = $this->calculateTimeline($req->logs);
+            $req->total_duration = $this->calculateTotalDuration($req->logs);
+        }
+
+        // Calculate average durations across all requests
+        $averages = $this->calculateAverageDurations($requests);
+
+        $statuses = [
+            'submitted',
+            'approved_by_manager',
+            'approved_by_budgeting',
+            'approved_by_dir_company',
+            'approved_by_fin_mgr_holding',
+            'approved_by_fin_dir_holding',
+            'approved_by_gen_dir_holding',
+            'processing',
+            'completed',
+            'rejected'
+        ];
+
+        // Selection data for filters
+        if (in_array($user->role, $holdingRoles)) {
+            $units = \App\Models\Unit::with('company')->get();
+            $companies = \App\Models\Company::all();
+        } else {
+            $units = \App\Models\Unit::where('company_id', $user->company_id)->get();
+            $companies = collect();
+        }
+
+        return view('reports.timeline', compact('requests', 'averages', 'statuses', 'units', 'companies'));
+    }
+
+    private function calculateTimeline($logs)
+    {
+        $timeline = [];
+        $previousLog = null;
+
+        foreach ($logs as $log) {
+            $duration = null;
+
+            if ($previousLog) {
+                $duration = $previousLog->created_at->diffInMinutes($log->created_at);
+            }
+
+            $timeline[] = [
+                'status' => $log->status_after,
+                'action' => $log->action,
+                'user' => $log->user->name ?? 'System',
+                'timestamp' => $log->created_at,
+                'duration_from_previous' => $duration,
+                'note' => $log->note
+            ];
+
+            $previousLog = $log;
+        }
+
+        return $timeline;
+    }
+
+    private function calculateTotalDuration($logs)
+    {
+        if ($logs->count() < 2) {
+            return 0;
+        }
+
+        $first = $logs->first();
+        $last = $logs->last();
+
+        return $first->created_at->diffInMinutes($last->created_at);
+    }
+
+    private function calculateAverageDurations($requests)
+    {
+        $durations = [];
+        $statusTransitions = [];
+
+        foreach ($requests as $req) {
+            if ($req->timeline) {
+                foreach ($req->timeline as $item) {
+                    if ($item['duration_from_previous'] !== null) {
+                        $key = $item['status'];
+
+                        if (!isset($statusTransitions[$key])) {
+                            $statusTransitions[$key] = [];
+                        }
+
+                        $statusTransitions[$key][] = $item['duration_from_previous'];
+                    }
+                }
+            }
+        }
+
+        // Calculate averages
+        foreach ($statusTransitions as $status => $times) {
+            $durations[$status] = [
+                'average' => count($times) > 0 ? array_sum($times) / count($times) : 0,
+                'min' => count($times) > 0 ? min($times) : 0,
+                'max' => count($times) > 0 ? max($times) : 0,
+                'count' => count($times)
+            ];
+        }
+
+        return $durations;
+    }
 }

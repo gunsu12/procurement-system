@@ -65,4 +65,17 @@ class UnitController extends Controller
 
         return redirect()->route('units.index')->with('success', 'Unit deleted successfully.');
     }
+
+    public function getUnits(Request $request)
+    {
+        $query = Unit::with('company');
+
+        if ($request->filled('company_id')) {
+            $query->where('company_id', $request->company_id);
+        }
+
+        $units = $query->get();
+
+        return response()->json($units);
+    }
 }
