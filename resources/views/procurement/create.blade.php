@@ -75,9 +75,10 @@
                 </div>
 
                 <div class="form-group mb-3">
-                    <label>Supporting Document</label>
-                    <input type="file" name="document" class="form-control">
-                    <small class="text-muted">Allowed types: pdf, doc, docx, xls, xlsx, jpg, png. Max: 10MB.</small>
+                    <label>Supporting Documents</label>
+                    <input type="file" name="document[]" class="form-control" multiple>
+                    <small class="text-muted">Allowed types: pdf, doc, docx, xls, xlsx, jpg, png. Max: 10MB per file.
+                        You can select multiple files.</small>
                 </div>
 
                 <h4>Items</h4>

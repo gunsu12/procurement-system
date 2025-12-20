@@ -102,15 +102,10 @@ class ProcurementController extends Controller
             'is_medical' => 'nullable|boolean',
             'is_cito' => 'nullable|boolean',
             'cito_reason' => 'required_if:is_cito,1|nullable|string|max:1000',
-            'document' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png|max:10240',
+            'document.*' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png|max:10240',
         ]);
 
         DB::transaction(function () use ($request) {
-            $path = null;
-            if ($request->hasFile('document')) {
-                $path = $request->file('document')->store('documents', 'public');
-            }
-
             $user = Auth::user();
             $procurement = ProcurementRequest::create([
                 'user_id' => $user->id,
@@ -122,8 +117,19 @@ class ProcurementController extends Controller
                 'is_medical' => $request->has('is_medical') ? true : false,
                 'is_cito' => $request->has('is_cito') ? true : false,
                 'cito_reason' => $request->is_cito ? $request->cito_reason : null,
-                'document_path' => $path,
             ]);
+
+            if ($request->hasFile('document')) {
+                foreach ($request->file('document') as $file) {
+                    $path = $file->store('documents', 'public');
+                    $procurement->documents()->create([
+                        'file_path' => $path,
+                        'file_name' => $file->getClientOriginalName(),
+                        'mime_type' => $file->getClientMimeType(),
+                        'file_size' => $file->getSize(),
+                    ]);
+                }
+            }
 
             foreach ($request->items as $item) {
                 $procurement->items()->create($item);
@@ -178,23 +184,29 @@ class ProcurementController extends Controller
             'is_medical' => 'nullable|boolean',
             'is_cito' => 'nullable|boolean',
             'cito_reason' => 'required_if:is_cito,1|nullable|string|max:1000',
-            'document' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png|max:10240',
+            'document.*' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png|max:10240',
         ]);
 
         DB::transaction(function () use ($request, $procurement) {
-            $path = $procurement->document_path;
-            if ($request->hasFile('document')) {
-                $path = $request->file('document')->store('documents', 'public');
-            }
-
             $procurement->update([
                 'notes' => $request->notes,
                 'request_type' => $request->request_type,
                 'is_medical' => $request->has('is_medical') ? true : false,
                 'is_cito' => $request->has('is_cito') ? true : false,
                 'cito_reason' => $request->is_cito ? $request->cito_reason : null,
-                'document_path' => $path,
             ]);
+
+            if ($request->hasFile('document')) {
+                foreach ($request->file('document') as $file) {
+                    $path = $file->store('documents', 'public');
+                    $procurement->documents()->create([
+                        'file_path' => $path,
+                        'file_name' => $file->getClientOriginalName(),
+                        'mime_type' => $file->getClientMimeType(),
+                        'file_size' => $file->getSize(),
+                    ]);
+                }
+            }
 
             // Sync items (delete and recreate for simplicity in this case)
             $procurement->items()->delete();
@@ -233,7 +245,7 @@ class ProcurementController extends Controller
             }
         }
 
-        $procurement->load('items', 'logs.user', 'company', 'unit');
+        $procurement->load('items.checkedBy', 'logs.user', 'company', 'unit', 'documents');
         return view('procurement.show', compact('procurement'));
     }
 
@@ -245,6 +257,14 @@ class ProcurementController extends Controller
 
         if (!$nextStatus) {
             return back()->with('error', 'Unauthorized action for this status.');
+        }
+
+        // Validasi: Jika status akan berubah ke 'completed', pastikan semua item sudah di-check
+        if ($nextStatus === 'completed') {
+            $uncheckedItems = $procurement->items()->where('is_checked', false)->count();
+            if ($uncheckedItems > 0) {
+                return back()->with('error', "Cannot complete request. There are still $uncheckedItems unchecked items.");
+            }
         }
 
         DB::transaction(function () use ($procurement, $request, $user, $nextStatus) {
@@ -295,5 +315,35 @@ class ProcurementController extends Controller
         ];
 
         return $map[$currentStatus][$role] ?? null;
+    }
+
+    public function toggleItemCheck(Request $request, ProcurementItem $item)
+    {
+        $user = Auth::user();
+
+        // Only purchasing team can check items
+        if ($user->role !== 'purchasing') {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        // Only items in purchasing phase can be checked
+        $procurement = $item->procurementRequest;
+        if ($procurement->status !== 'processing') {
+            return response()->json(['error' => 'Items can only be checked in purchasing phase'], 400);
+        }
+
+        // Toggle the check status
+        $item->update([
+            'is_checked' => !$item->is_checked,
+            'checked_at' => !$item->is_checked ? now() : null,
+            'checked_by' => !$item->is_checked ? $user->id : null,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'is_checked' => $item->is_checked,
+            'checked_at' => $item->checked_at ? $item->checked_at->format('d M Y H:i') : null,
+            'checked_by' => $item->is_checked ? $user->name : null,
+        ]);
     }
 }

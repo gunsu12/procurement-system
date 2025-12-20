@@ -30,6 +30,7 @@ Route::prefix('procurement')->name('procurement.')->group(function () {
     Route::put('/{procurement}', [App\Http\Controllers\ProcurementController::class, 'update'])->name('update');
     Route::post('/{procurement}/approve', [App\Http\Controllers\ProcurementController::class, 'approve'])->name('approve');
     Route::post('/{procurement}/reject', [App\Http\Controllers\ProcurementController::class, 'reject'])->name('reject');
+    Route::post('/items/{item}/toggle-check', [App\Http\Controllers\ProcurementController::class, 'toggleItemCheck'])->name('items.toggle-check');
 });
 
 Route::prefix('reports')->name('reports.')->group(function () {

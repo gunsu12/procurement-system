@@ -14,6 +14,24 @@
 
 @section('content')
 <div class="container-fluid">
+    @if(session('success'))
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle mr-2"></i> {{ session('success') }}
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    @endif
+
+    @if(session('error'))
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle mr-2"></i> {{ session('error') }}
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    @endif
+
     <div class="row">
         <div class="col-md-8">
             <div class="card mb-3">
@@ -105,29 +123,68 @@
                         </div>
                     @endif
 
-                    @if ($procurement->document_path)
+                    @if ($procurement->document_path || $procurement->documents->count() > 0)
                         <div class="row mb-3">
                             <div class="col-md-12">
-                                <p class="mb-2"><strong>Supporting Document:</strong></p>
-                                <button type="button" class="btn btn-sm btn-info" data-toggle="modal"
-                                    data-target="#documentModal">
-                                    <i class="fas fa-eye"></i> View Document
-                                </button>
-                                <a href="{{ asset('storage/' . $procurement->document_path) }}" target="_blank"
-                                    class="btn btn-sm btn-secondary">
-                                    <i class="fas fa-file-download"></i> Download
-                                </a>
+                                <p class="mb-2"><strong>Supporting Documents:</strong></p>
+                                
+                                {{-- Legacy Document --}}
+                                @if ($procurement->document_path)
+                                    <div class="mb-2">
+                                        <a href="{{ asset('storage/' . $procurement->document_path) }}" target="_blank"
+                                            class="btn btn-sm btn-info">
+                                            <i class="fas fa-file"></i> View Legacy Document ({{ basename($procurement->document_path) }})
+                                        </a>
+                                        <a href="{{ asset('storage/' . $procurement->document_path) }}" target="_blank"
+                                                class="btn btn-sm btn-secondary ml-1" download>
+                                                <i class="fas fa-download"></i>
+                                            </a>
+                                    </div>
+                                @endif
+
+                                {{-- New Documents --}}
+                                @if ($procurement->documents->count() > 0)
+                                    <div class="list-group">
+                                        @foreach($procurement->documents as $doc)
+                                            <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center p-2">
+                                                <div>
+                                                    <a href="{{ asset('storage/' . $doc->file_path) }}" target="_blank" class="text-primary">
+                                                        <i class="fas fa-file-alt mr-2"></i> {{ $doc->file_name }}
+                                                    </a>
+                                                    <small class="text-muted ml-2">({{ number_format($doc->file_size / 1024, 0) }} KB)</small>
+                                                </div>
+                                                <a href="{{ asset('storage/' . $doc->file_path) }}" class="btn btn-sm btn-secondary" download>
+                                                    <i class="fas fa-download"></i>
+                                                </a>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                @endif
                             </div>
                         </div>
                     @endif
 
                     <hr>
 
-                    <h5 class="mb-3">Items</h5>
+                    <h5 class="mb-3">
+                        Items
+                        @if($procurement->status == 'processing')
+                            <span class="badge badge-info ml-2">
+                                <i class="fas fa-clipboard-check"></i>
+                                {{ $procurement->items->where('is_checked', true)->count() }} /
+                                {{ $procurement->items->count() }} Checked
+                            </span>
+                        @endif
+                    </h5>
                     <div class="table-responsive">
                         <table class="table table-bordered table-hover">
                             <thead class="thead-light">
                                 <tr>
+                                    @if($procurement->status == 'processing' && Auth::user()->role == 'purchasing')
+                                        <th width="50">
+                                            <i class="fas fa-check-circle text-success"></i>
+                                        </th>
+                                    @endif
                                     <th>Name</th>
                                     <th>Spec</th>
                                     <th>Qty</th>
@@ -139,8 +196,32 @@
                             </thead>
                             <tbody>
                                 @foreach ($procurement->items as $item)
-                                    <tr>
-                                        <td>{{ $item->name }}</td>
+                                    <tr class="{{ $item->is_checked ? 'table-success' : '' }}"
+                                        id="item-row-{{ $item->id }}">
+                                        @if($procurement->status == 'processing' && Auth::user()->role == 'purchasing')
+                                            <td class="text-center" style="vertical-align: middle;">
+                                                <button type="button"
+                                                    class="btn {{ $item->is_checked ? 'btn-success' : 'btn-default' }} toggle-check-btn"
+                                                    data-item-id="{{ $item->id }}"
+                                                    style="width: 28px; height: 28px; padding: 0; border-radius: 4px; border: 2px solid #28a745; transition: all 0.2s;"
+                                                    title="{{ $item->is_checked ? 'Uncheck item' : 'Check item' }}">
+                                                    <i class="fas fa-check"
+                                                        style="{{ $item->is_checked ? '' : 'display: none;' }} font-size: 0.8rem;"></i>
+                                                </button>
+                                            </td>
+                                        @endif
+                                        <td>
+                                            {{ $item->name }}
+                                            @if($item->is_checked)
+                                                <br>
+                                                <small class="text-muted">
+                                                    <i class="fas fa-user"></i> {{ $item->checkedBy->name ?? '-' }}
+                                                    <br>
+                                                    <i class="fas fa-clock"></i>
+                                                    {{ $item->checked_at ? $item->checked_at->format('d M Y H:i') : '-' }}
+                                                </small>
+                                            @endif
+                                        </td>
                                         <td>{{ $item->specification ?? '-' }}</td>
                                         <td>{{ $item->quantity }}</td>
                                         <td class="text-right">Rp
@@ -156,7 +237,8 @@
                             </tbody>
                             <tfoot class="table-info">
                                 <tr>
-                                    <td colspan="4" class="text-right"><strong>Total Pengajuan:</strong></td>
+                                    <td colspan="{{ $procurement->status == 'processing' && Auth::user()->role == 'purchasing' ? 5 : 4 }}"
+                                        class="text-right"><strong>Total Pengajuan:</strong></td>
                                     <td class="text-right"><strong>Rp
                                             {{ number_format($procurement->total_amount, 2, ',', '.') }}</strong>
                                     </td>
@@ -263,39 +345,96 @@
     </div>
 </div>
 
-@if ($procurement->document_path)
-    <div class="modal fade" id="documentModal" tabindex="-1" role="dialog" aria-labelledby="documentModalLabel"
-        aria-hidden="true">
-        <div class="modal-dialog modal-xl" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="documentModalLabel">Supporting Document:
-                        {{ basename($procurement->document_path) }}
-                    </h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body" style="height: 80vh; overflow-y: auto;">
-                    @php
-                        $extension = pathinfo($procurement->document_path, PATHINFO_EXTENSION);
-                        $isImage = in_array(strtolower($extension), ['jpg', 'jpeg', 'png', 'gif', 'svg']);
-                    @endphp
 
-                    @if ($isImage)
-                        <div class="text-center">
-                            <img src="{{ asset('storage/' . $procurement->document_path) }}" class="img-fluid" alt="Document">
-                        </div>
-                    @else
-                        <iframe src="{{ asset('storage/' . $procurement->document_path) }}" width="100%" height="100%"
-                            frameborder="0"></iframe>
-                    @endif
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                </div>
-            </div>
-        </div>
-    </div>
-@endif
+
+@push('js')
+    <script>
+        $(document).ready(function () {
+            // Handle checklist toggle
+            $('.toggle-check-btn').on('click', function () {
+                const button = $(this);
+                const itemId = button.data('item-id');
+                const row = $('#item-row-' + itemId);
+
+                // Disable button during request
+                button.prop('disabled', true);
+
+                $.ajax({
+                    url: '{{ url("/procurement/items") }}/' + itemId + '/toggle-check',
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    success: function (response) {
+                        if (response.success) {
+                            // Update button appearance
+                            if (response.is_checked) {
+                                button.removeClass('btn-default').addClass('btn-success');
+                                button.find('i').show();
+                                button.attr('title', 'Uncheck item');
+                                row.addClass('table-success');
+
+                                // Update item name cell with check info
+                                const nameCell = row.find('td:eq(1)');
+                                const itemName = nameCell.contents().filter(function () {
+                                    return this.nodeType === 3;
+                                }).text().trim();
+
+                                nameCell.html(`
+                                                    ${itemName}
+                                                    <br>
+                                                    <small class="text-muted">
+                                                        <i class="fas fa-user"></i> ${response.checked_by}
+                                                        <br>
+                                                        <i class="fas fa-clock"></i> ${response.checked_at}
+                                                    </small>
+                                                `);
+                            } else {
+                                button.removeClass('btn-success').addClass('btn-default');
+                                button.find('i').hide();
+                                button.attr('title', 'Check item');
+                                row.removeClass('table-success');
+
+                                // Remove check info from item name cell
+                                const nameCell = row.find('td:eq(1)');
+                                const itemName = nameCell.contents().filter(function () {
+                                    return this.nodeType === 3;
+                                }).text().trim();
+                                nameCell.text(itemName);
+                            }
+
+                            // Update the badge counter
+                            updateCheckCounter();
+
+                            // Show success toast
+                            toastr.success(response.is_checked ? 'Item checked successfully' : 'Item unchecked successfully');
+                        }
+
+                        // Re-enable button
+                        button.prop('disabled', false);
+                    },
+                    error: function (xhr) {
+                        let errorMessage = 'Failed to toggle item check';
+                        if (xhr.responseJSON && xhr.responseJSON.error) {
+                            errorMessage = xhr.responseJSON.error;
+                        }
+                        toastr.error(errorMessage);
+
+                        // Re-enable button
+                        button.prop('disabled', false);
+                    }
+                });
+            });
+
+            function updateCheckCounter() {
+                const totalItems = {{ $procurement->items->count() }};
+                const checkedItems = $('.toggle-check-btn.btn-success').length;
+                $('.badge.badge-info').html(`
+                                    <i class="fas fa-clipboard-check"></i>
+                                    ${checkedItems} / ${totalItems} Checked
+                                `);
+            }
+        });
+    </script>
+@endpush
 @stop

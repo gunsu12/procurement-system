@@ -16,7 +16,15 @@ class ProcurementItem extends Model
         'quantity',
         'estimated_price',
         'unit',
-        'budget_info'
+        'budget_info',
+        'is_checked',
+        'checked_at',
+        'checked_by'
+    ];
+
+    protected $casts = [
+        'is_checked' => 'boolean',
+        'checked_at' => 'datetime',
     ];
 
     public function procurementRequest()
@@ -27,5 +35,10 @@ class ProcurementItem extends Model
     public function getSubtotalAttribute()
     {
         return $this->quantity * $this->estimated_price;
+    }
+
+    public function checkedBy()
+    {
+        return $this->belongsTo(User::class, 'checked_by');
     }
 }

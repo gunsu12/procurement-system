@@ -95,6 +95,11 @@ class ProcurementRequest extends Model
         return $this->hasMany(RequestLog::class)->latest();
     }
 
+    public function documents()
+    {
+        return $this->hasMany(ProcurementDocument::class);
+    }
+
     public function getTotalAmountAttribute()
     {
         return $this->items->sum(function ($item) {

@@ -77,14 +77,35 @@
                     </div>
 
                     <div class="form-group mb-3">
-                        <label>Supporting Document</label>
+                        <label>Supporting Documents</label>
+                        {{-- Show Legacy Document --}}
                         @if($procurement->document_path)
                             <div class="mb-2">
-                                <a href="{{ asset('storage/' . $procurement->document_path) }}" target="_blank" class="btn btn-xs btn-info">View Current Document</a>
+                                <span class="badge badge-secondary">Legacy Document</span>
+                                <a href="{{ asset('storage/' . $procurement->document_path) }}" target="_blank" class="btn btn-xs btn-info">View</a>
                             </div>
                         @endif
-                        <input type="file" name="document" class="form-control">
-                        <small class="text-muted">Allowed types: pdf, doc, docx, xls, xlsx, jpg, png. Max: 10MB. Leave empty if no change.</small>
+
+                        {{-- Show New Documents --}}
+                        @if($procurement->documents->count() > 0)
+                            <div class="mb-3">
+                                <label>Existing Documents:</label>
+                                <ul class="list-unstyled">
+                                    @foreach($procurement->documents as $doc)
+                                        <li class="mb-1">
+                                            <a href="{{ asset('storage/' . $doc->file_path) }}" target="_blank">
+                                                <i class="fas fa-file"></i> {{ $doc->file_name }}
+                                            </a>
+                                            <small class="text-muted">({{ number_format($doc->file_size / 1024, 0) }} KB)</small>
+                                        </li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        @endif
+
+                        <label>Upload New Documents</label>
+                        <input type="file" name="document[]" class="form-control" multiple>
+                        <small class="text-muted">Allowed types: pdf, doc, docx, xls, xlsx, jpg, png. Max: 10MB per file. You can select multiple files.</small>
                     </div>
 
                     <h4>Items</h4>
