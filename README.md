@@ -1,64 +1,114 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400"></a></p>
+# Panduan Deployment Produksi (Docker)
 
-<p align="center">
-<a href="https://travis-ci.org/laravel/framework"><img src="https://travis-ci.org/laravel/framework.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Dokumen ini menjelaskan langkah-langkah untuk melakukan deployment **Procurement System** ke server produksi menggunakan Docker.
 
-## About Laravel
+## 1. Persiapan di Local Machine (Laptop)
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+Sebelum deploy, pastikan image terbaru sudah di-build dan di-push ke Docker Hub.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+```bash
+# 1. Compile assets untuk produksi
+npm install
+npm run prod
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+# 2. Build image Docker
+docker build -t gunsu13/bros_procurement:latest .
 
-## Learning Laravel
+# 3. Login ke Docker Hub (jika belum)
+docker login
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+# 4. Push image ke repository
+docker push gunsu13/bros_procurement:latest
+```
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains over 1500 video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+---
 
-## Laravel Sponsors
+## 2. Persiapan di Server (Production)
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the Laravel [Patreon page](https://patreon.com/taylorotwell).
+Pastikan server sudah terinstall **Docker** dan **Docker Compose**.
 
-### Premium Partners
+### Langkah-langkah:
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Cubet Techno Labs](https://cubettech.com)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[Many](https://www.many.co.uk)**
-- **[Webdock, Fast VPS Hosting](https://www.webdock.io/en)**
-- **[DevSquad](https://devsquad.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[OP.GG](https://op.gg)**
-- **[WebReinvent](https://webreinvent.com/?utm_source=laravel&utm_medium=github&utm_campaign=patreon-sponsors)**
-- **[Lendio](https://lendio.com)**
+1. **Buat direktori proyek:**
+   ```bash
+   mkdir -p ~/docker/bros_procurement
+   cd ~/docker/bros_procurement
+   ```
 
-## Contributing
+2. **Salin file konfigurasi:**
+   Salin file `docker-compose.yml` dan folder `docker/nginx/` dari lokal ke server di dalam folder tersebut.
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+3. **Buat file `.env` di server:**
+   ```bash
+   nano .env
+   ```
+   Sesuaikan nilai-nilai berikut dengan kondisi server:
+   ```env
+   APP_NAME="Procurement System"
+   APP_ENV=production
+   APP_DEBUG=false
+   APP_URL=http://IP_SERVER_ATAU_DOMAIN
 
-## Code of Conduct
+   DB_CONNECTION=pgsql
+   DB_HOST=IP_DATABASE_ATAU_NAMA_SERVICE
+   DB_PORT=5432
+   DB_DATABASE=procurement_system
+   DB_USERNAME=postgres
+   DB_PASSWORD=your_secure_password
+   ```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+4. **Jalankan aplikasi:**
+   ```bash
+   # Tarik image terbaru dari Docker Hub
+   docker-compose pull
 
-## Security Vulnerabilities
+   # Jalankan kontainer
+   docker-compose up -d
+   ```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+---
 
-## License
+## 3. Langkah Pasca-Install (First Time Only)
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Jalankan perintah ini hanya saat pertama kali install atau jika ada perubahan database:
+
+1. **Generate App Key:**
+   ```bash
+   docker-compose exec app php artisan key:generate
+   ```
+
+2. **Jalankan Migrasi Database:**
+   ```bash
+   docker-compose exec app php artisan migrate --force
+   ```
+
+3. **Optimasi Laravel (Opsional tapi disarankan):**
+   ```bash
+   docker-compose exec app php artisan config:cache
+   docker-compose exec app php artisan route:cache
+   docker-compose exec app php artisan view:cache
+   ```
+
+---
+
+## 4. Cara Update Aplikasi (Jika ada perubahan code)
+
+Setiap kali Anda selesai melakukan coding dan ingin update server:
+
+1. **Di Lokal:** Build & Push (`docker build ...` & `docker push ...`)
+2. **Di Server:**
+   ```bash
+   cd ~/docker/bros_procurement
+   docker-compose pull
+   docker-compose up -d
+   docker-compose exec app php artisan migrate --force
+   docker-compose exec app php artisan optimize
+   ```
+
+---
+
+## Troubleshooting
+
+* **Cek Log Aplikasi:** `docker-compose logs -f app`
+* **Masuk ke Kontainer:** `docker-compose exec app bash`
+* **Restart Manual:** `docker-compose restart`

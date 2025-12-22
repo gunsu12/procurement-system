@@ -1,9 +1,6 @@
 services:
   # PHP Application
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
     image: gunsu13/bros_procurement:latest
     container_name: procurement-app
     restart: unless-stopped
