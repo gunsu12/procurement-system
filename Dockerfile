@@ -54,6 +54,9 @@ RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache /var/ww
     chmod -R 775 /var/www/storage /var/www/bootstrap/cache && \
     chmod 664 /var/www/.env
 
+# Create storage symlink
+RUN php artisan storage:link
+
 # Change back to www-data
 USER www-data
 

@@ -88,12 +88,24 @@ class ProcurementController extends Controller
 
     public function create()
     {
-        return view('procurement.create');
+        $user = Auth::user();
+        $units = collect();
+        $companies = collect();
+
+        if (in_array($user->role, ['super_admin', 'purchasing', 'finance_manager_holding', 'finance_director_holding', 'general_director_holding'])) {
+            $units = \App\Models\Unit::all();
+            $companies = \App\Models\Company::all();
+        }
+
+        return view('procurement.create', compact('units', 'companies'));
     }
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
+        $user = Auth::user();
+        $isHighLevel = in_array($user->role, ['super_admin', 'purchasing', 'finance_manager_holding', 'finance_director_holding', 'general_director_holding']);
+
+        $rules = [
             'items' => 'required|array',
             'items.*.name' => 'required|string',
             'items.*.quantity' => 'required|integer|min:1',
@@ -105,14 +117,25 @@ class ProcurementController extends Controller
             'is_cito' => 'nullable|boolean',
             'cito_reason' => 'required_if:is_cito,1|nullable|string|max:1000',
             'document.*' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png|max:10240',
-        ]);
+        ];
 
-        DB::transaction(function () use ($request) {
-            $user = Auth::user();
+        if ($isHighLevel) {
+            $rules['unit_id'] = 'required|exists:units,id';
+        }
+
+        $validated = $request->validate($rules);
+
+        DB::transaction(function () use ($request, $user, $isHighLevel) {
+            $unitId = $isHighLevel ? $request->unit_id : $user->unit_id;
+
+            // Get company_id from the selected unit
+            $unit = \App\Models\Unit::findOrFail($unitId);
+            $companyId = $unit->company_id;
+
             $procurement = ProcurementRequest::create([
                 'user_id' => $user->id,
-                'unit_id' => $user->unit_id,
-                'company_id' => $user->company_id,
+                'unit_id' => $unitId,
+                'company_id' => $companyId,
                 'status' => 'submitted', // Initial status
                 'notes' => $request->notes,
                 'request_type' => $request->request_type,

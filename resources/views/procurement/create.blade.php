@@ -28,6 +28,24 @@
                         placeholder="Catatan tambahan untuk permohonan ini (opsional)"></textarea>
                 </div>
 
+                @if(in_array(Auth::user()->role, ['super_admin', 'purchasing', 'finance_manager_holding', 'finance_director_holding', 'general_director_holding']))
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="form-group mb-3">
+                                <label>Unit Pelaksana (Requesting Unit) <span class="text-danger">*</span></label>
+                                <select name="unit_id" class="form-control select2" required>
+                                    <option value="">-- Pilih Unit --</option>
+                                    @foreach($units as $unit)
+                                        <option value="{{ $unit->id }}">{{ $unit->company->name ?? '' }} - {{ $unit->name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                <small class="text-muted">Pilih unit yang melakukan pengajuan ini</small>
+                            </div>
+                        </div>
+                    </div>
+                @endif
+
                 <div class="row">
                     <div class="col-md-6">
                         <div class="form-group mb-3">
