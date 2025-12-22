@@ -9,6 +9,7 @@ services:
       - .env
     working_dir: /var/www
     volumes:
+      - public_data:/var/www/public
       - ./storage:/var/www/storage
       - ./bootstrap/cache:/var/www/bootstrap/cache
     networks:
