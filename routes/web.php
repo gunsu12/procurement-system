@@ -31,6 +31,8 @@ Route::prefix('procurement')->name('procurement.')->group(function () {
     Route::post('/{procurement}/approve', [App\Http\Controllers\ProcurementController::class, 'approve'])->name('approve');
     Route::post('/{procurement}/reject', [App\Http\Controllers\ProcurementController::class, 'reject'])->name('reject');
     Route::post('/items/{item}/toggle-check', [App\Http\Controllers\ProcurementController::class, 'toggleItemCheck'])->name('items.toggle-check');
+    Route::delete('/documents/{document}', [App\Http\Controllers\ProcurementController::class, 'deleteDocument'])->name('documents.delete');
+    Route::delete('/{procurement}/legacy-document', [App\Http\Controllers\ProcurementController::class, 'deleteLegacyDocument'])->name('legacy-document.delete');
 });
 
 Route::prefix('reports')->name('reports.')->group(function () {

@@ -4,10 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Models\ProcurementRequest;
 use App\Models\ProcurementItem;
+use App\Models\ProcurementDocument;
 use App\Models\RequestLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 class ProcurementController extends Controller
 {
@@ -224,7 +226,7 @@ class ProcurementController extends Controller
             ]);
         });
 
-        return redirect()->route('procurement.index')->with('success', 'Request updated successfully.');
+        return redirect()->route('procurement.show', $procurement->hashid)->with('success', 'Request updated successfully.');
     }
 
     public function show(ProcurementRequest $procurement)
@@ -345,5 +347,61 @@ class ProcurementController extends Controller
             'checked_at' => $item->checked_at ? $item->checked_at->format('d M Y H:i') : null,
             'checked_by' => $item->is_checked ? $user->name : null,
         ]);
+    }
+
+    public function deleteDocument(ProcurementDocument $document)
+    {
+        $user = Auth::user();
+        $procurement = $document->procurementRequest;
+
+        // Authorization: Only owner can delete if status is submitted
+        if ($procurement->user_id != $user->id) {
+            return response()->json(['error' => 'Unauthorized access.'], 403);
+        }
+
+        if ($procurement->status != 'submitted') {
+            return response()->json(['error' => 'Documents can only be deleted while the request is in submitted status.'], 403);
+        }
+
+        try {
+            // Delete file from storage
+            if (Storage::disk('public')->exists($document->file_path)) {
+                Storage::disk('public')->delete($document->file_path);
+            }
+
+            // Delete record from DB
+            $document->delete();
+
+            return response()->json(['success' => 'Document deleted successfully.']);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Failed to delete document: ' . $e->getMessage()], 500);
+        }
+    }
+
+    public function deleteLegacyDocument(ProcurementRequest $procurement)
+    {
+        $user = Auth::user();
+
+        // Authorization
+        if ($procurement->user_id != $user->id) {
+            return response()->json(['error' => 'Unauthorized access.'], 403);
+        }
+
+        if ($procurement->status != 'submitted') {
+            return response()->json(['error' => 'Documents can only be deleted while the request is in submitted status.'], 403);
+        }
+
+        try {
+            if ($procurement->document_path) {
+                if (Storage::disk('public')->exists($procurement->document_path)) {
+                    Storage::disk('public')->delete($procurement->document_path);
+                }
+                $procurement->update(['document_path' => null]);
+            }
+
+            return response()->json(['success' => 'Legacy document deleted successfully.']);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Failed to delete document: ' . $e->getMessage()], 500);
+        }
     }
 }

@@ -78,28 +78,95 @@
 
                     <div class="form-group mb-3">
                         <label>Supporting Documents</label>
-                        {{-- Show Legacy Document --}}
-                        @if($procurement->document_path)
-                            <div class="mb-2">
-                                <span class="badge badge-secondary">Legacy Document</span>
-                                <a href="{{ asset('storage/' . $procurement->document_path) }}" target="_blank" class="btn btn-xs btn-info">View</a>
-                            </div>
-                        @endif
+                        
+                        @if ($procurement->document_path || $procurement->documents->count() > 0)
+                            <div class="table-responsive mb-3">
+                                <table class="table table-bordered table-sm">
+                                    <thead class="thead-light">
+                                        <tr>
+                                            <th style="width: 50px;">#</th>
+                                            <th>File Name</th>
+                                            <th style="width: 100px;">Size</th>
+                                            <th style="width: 120px;" class="text-center">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {{-- Legacy Document --}}
+                                        @if ($procurement->document_path)
+                                            @php
+                                                $ext = strtolower(pathinfo($procurement->document_path, PATHINFO_EXTENSION));
+                                                $icon = 'fa-file';
+                                                if (in_array($ext, ['pdf'])) $icon = 'fa-file-pdf text-danger';
+                                                elseif (in_array($ext, ['doc', 'docx'])) $icon = 'fa-file-word text-primary';
+                                                elseif (in_array($ext, ['xls', 'xlsx'])) $icon = 'fa-file-excel text-success';
+                                                elseif (in_array($ext, ['jpg', 'jpeg', 'png', 'gif'])) $icon = 'fa-file-image text-purple';
+                                            @endphp
+                                            <tr>
+                                                <td class="text-center"><i class="fas {{ $icon }}"></i></td>
+                                                <td>
+                                                    {{ basename($procurement->document_path) }}
+                                                    <span class="badge badge-secondary ml-1">Legacy</span>
+                                                </td>
+                                                <td>-</td>
+                                                <td class="text-center">
+                                                    <button type="button" class="btn btn-xs btn-info btn-view-document"
+                                                        data-url="{{ asset('storage/' . $procurement->document_path) }}"
+                                                        data-type="{{ $ext }}"
+                                                        title="View">
+                                                        <i class="fas fa-eye"></i>
+                                                    </button>
+                                                    <a href="{{ asset('storage/' . $procurement->document_path) }}" 
+                                                       class="btn btn-xs btn-secondary" download title="Download">
+                                                        <i class="fas fa-download"></i>
+                                                    </a>
+                                                    @if($procurement->user_id == Auth::id() && $procurement->status == 'submitted')
+                                                        <button type="button" class="btn btn-xs btn-danger btn-delete-document" 
+                                                            data-url="{{ route('procurement.legacy-document.delete', $procurement->hashid) }}"
+                                                            title="Delete">
+                                                            <i class="fas fa-trash"></i>
+                                                        </button>
+                                                    @endif
+                                                </td>
+                                            </tr>
+                                        @endif
 
-                        {{-- Show New Documents --}}
-                        @if($procurement->documents->count() > 0)
-                            <div class="mb-3">
-                                <label>Existing Documents:</label>
-                                <ul class="list-unstyled">
-                                    @foreach($procurement->documents as $doc)
-                                        <li class="mb-1">
-                                            <a href="{{ asset('storage/' . $doc->file_path) }}" target="_blank">
-                                                <i class="fas fa-file"></i> {{ $doc->file_name }}
-                                            </a>
-                                            <small class="text-muted">({{ number_format($doc->file_size / 1024, 0) }} KB)</small>
-                                        </li>
-                                    @endforeach
-                                </ul>
+                                        {{-- New Documents --}}
+                                        @foreach($procurement->documents as $doc)
+                                            @php
+                                                $ext = strtolower(pathinfo($doc->file_name, PATHINFO_EXTENSION));
+                                                $icon = 'fa-file';
+                                                if (in_array($ext, ['pdf'])) $icon = 'fa-file-pdf text-danger';
+                                                elseif (in_array($ext, ['doc', 'docx'])) $icon = 'fa-file-word text-primary';
+                                                elseif (in_array($ext, ['xls', 'xlsx'])) $icon = 'fa-file-excel text-success';
+                                                elseif (in_array($ext, ['jpg', 'jpeg', 'png', 'gif'])) $icon = 'fa-file-image text-purple';
+                                            @endphp
+                                            <tr>
+                                                <td class="text-center"><i class="fas {{ $icon }}"></i></td>
+                                                <td>{{ $doc->file_name }}</td>
+                                                <td>{{ number_format($doc->file_size / 1024, 0) }} KB</td>
+                                                <td class="text-center">
+                                                    <button type="button" class="btn btn-xs btn-info btn-view-document"
+                                                        data-url="{{ asset('storage/' . $doc->file_path) }}"
+                                                        data-type="{{ $doc->mime_type ?? $ext }}"
+                                                        title="View">
+                                                        <i class="fas fa-eye"></i>
+                                                    </button>
+                                                    <a href="{{ asset('storage/' . $doc->file_path) }}" 
+                                                       class="btn btn-xs btn-secondary" download title="Download">
+                                                        <i class="fas fa-download"></i>
+                                                    </a>
+                                                    @if($procurement->user_id == Auth::id() && $procurement->status == 'submitted')
+                                                        <button type="button" class="btn btn-xs btn-danger btn-delete-document" 
+                                                            data-url="{{ route('procurement.documents.delete', $doc->id) }}"
+                                                            title="Delete">
+                                                            <i class="fas fa-trash"></i>
+                                                        </button>
+                                                    @endif
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
                             </div>
                         @endif
 
@@ -156,10 +223,112 @@
             </div>
         </div>
     </div>
+    {{-- Document Preview Modal --}}
+    <div class="modal fade" id="documentPreviewModal" tabindex="-1" role="dialog" aria-labelledby="documentPreviewModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl" role="document" style="height: 95vh;">
+            <div class="modal-content h-100">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="documentPreviewModalLabel">Document Preview</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body p-0 bg-dark d-flex align-items-center justify-content-center" id="documentPreviewContainer" style="overflow: auto;">
+                    {{-- Content will be loaded here --}}
+                </div>
+            </div>
+        </div>
+    </div>
 @stop
 
 @section('js')
     <script>
+        $(document).ready(function () {
+             // Document Preview Handler
+             $('.btn-view-document').on('click', function() {
+                const btn = $(this);
+                const url = btn.data('url');
+                const type = String(btn.data('type')).toLowerCase();
+                const container = $('#documentPreviewContainer');
+                const modal = $('#documentPreviewModal');
+                
+                container.empty();
+                modal.modal('show');
+
+                let content = '';
+
+                if (type.includes('image') || ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'].includes(type.split('/').pop())) {
+                    content = `<img src="${url}" class="img-fluid" style="max-height: 100%; width: auto;">`;
+                } else if (type.includes('pdf')) {
+                    content = `<embed src="${url}" type="application/pdf" width="100%" height="100%">`;
+                } else {
+                    content = `
+                        <div class="text-center text-white p-5">
+                            <i class="fas fa-file-download fa-5x mb-4 text-muted"></i>
+                            <h4>Preview not available</h4>
+                            <p class="mb-4">This file type cannot be previewed directly.</p>
+                            <a href="${url}" class="btn btn-primary" download>
+                                <i class="fas fa-download mr-1"></i> Download File
+                            </a>
+                        </div>
+                    `;
+                }
+                
+                container.html(content);
+            });
+
+            // Document Delete Handler
+            $('.btn-delete-document').on('click', function() {
+                const btn = $(this);
+                const url = btn.data('url');
+                const row = btn.closest('tr');
+
+                Swal.fire({
+                    title: 'Delete Document?',
+                    text: "This action cannot be undone!",
+                    type: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Yes, delete it!'
+                }).then((result) => {
+                    if (result.value) {
+                        btn.prop('disabled', true);
+                        
+                        $.ajax({
+                            url: url,
+                            method: 'POST',
+                            data: {
+                                _method: 'DELETE',
+                                _token: '{{ csrf_token() }}'
+                            },
+                            success: function(response) {
+                                if (response.success) {
+                                    Swal.fire(
+                                        'Deleted!',
+                                        response.success,
+                                        'success'
+                                    );
+                                    row.fadeOut(300, function() {
+                                        $(this).remove();
+                                    });
+                                } else {
+                                    Swal.fire('Error!', response.error || 'Failed to delete', 'error');
+                                    btn.prop('disabled', false);
+                                }
+                            },
+                            error: function(xhr) {
+                                let msg = 'Failed to delete document';
+                                if (xhr.responseJSON && xhr.responseJSON.error) msg = xhr.responseJSON.error;
+                                Swal.fire('Error!', msg, 'error');
+                                btn.prop('disabled', false);
+                            }
+                        });
+                    }
+                });
+            });
+        });
+
         let itemIndex = {{ count(old('items', $procurement->items)) }};
 
         // Calculate total
