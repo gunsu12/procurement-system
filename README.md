@@ -1,13 +1,13 @@
-# Panduan Deployment Produksi (Docker)
+# Panduan Deployment Produksi (Docker) - BROS Procurement
 
 Dokumen ini menjelaskan langkah-langkah untuk melakukan deployment **Procurement System** ke server produksi menggunakan Docker.
 
 ## 1. Persiapan di Local Machine (Laptop)
 
-Sebelum deploy, pastikan image terbaru sudah di-build dan di-push ke Docker Hub.
+Setiap ada perubahan code, lakukan build dan push image baru ke Docker Hub.
 
 ```bash
-# 1. Compile assets untuk produksi
+# 1. Compile assets untuk produksi (Opsional jika sudah masuk Dockerfile)
 npm install
 npm run prod
 
@@ -27,37 +27,36 @@ docker push gunsu13/bros_procurement:latest
 
 Pastikan server sudah terinstall **Docker** dan **Docker Compose**.
 
-### Langkah-langkah:
+### A. Struktur Folder
+Buat direktori proyek di server:
+```bash
+mkdir -p ~/docker/bros_procurement
+cd ~/docker/bros_procurement
+```
 
-1. **Buat direktori proyek:**
-   ```bash
-   mkdir -p ~/docker/bros_procurement
-   cd ~/docker/bros_procurement
-   ```
-
-2. **Salin file konfigurasi:**
-   Salin file `docker-compose.yml` dan folder `docker/nginx/` dari lokal ke server di dalam folder tersebut.
-
-3. **Buat file `.env` di server:**
+### B. Konfigurasi File
+1. Salin file `docker-compose.yml` dan folder `docker/nginx/` dari lokal ke server.
+2. Buat file `.env` di server:
    ```bash
    nano .env
    ```
-   Sesuaikan nilai-nilai berikut dengan kondisi server:
-   ```env
-   APP_NAME="Procurement System"
-   APP_ENV=production
-   APP_DEBUG=false
-   APP_URL=http://IP_SERVER_ATAU_DOMAIN
+   Sesuaikan nilai (DB, APP_URL, dll) sesuai kebutuhan produksi.
 
-   DB_CONNECTION=pgsql
-   DB_HOST=IP_DATABASE_ATAU_NAMA_SERVICE
-   DB_PORT=5432
-   DB_DATABASE=procurement_system
-   DB_USERNAME=postgres
-   DB_PASSWORD=your_secure_password
+3. **Siapkan folder storage** di host agar tidak error saat mounting:
+   ```bash
+   mkdir -p storage/app/public storage/framework/cache storage/framework/sessions storage/framework/views storage/logs
    ```
 
-4. **Jalankan aplikasi:**
+4. **Set Permission** (SANGAT PENTING agar tidak Error 500):
+   ```bash
+   sudo chmod -R 777 storage bootstrap/cache
+   ```
+
+---
+
+## 3. Langkah Instalasi (First Time Only)
+
+1. **Jalankan aplikasi:**
    ```bash
    # Tarik image terbaru dari Docker Hub
    docker-compose pull
@@ -66,49 +65,35 @@ Pastikan server sudah terinstall **Docker** dan **Docker Compose**.
    docker-compose up -d
    ```
 
----
-
-## 3. Langkah Pasca-Install (First Time Only)
-
-Jalankan perintah ini hanya saat pertama kali install atau jika ada perubahan database:
-
-1. **Generate App Key:**
+2. **Setup Awal Laravel:**
    ```bash
+   # Generate App Key (jika belum ada di .env)
    docker-compose exec app php artisan key:generate
-   ```
 
-2. **Jalankan Migrasi Database:**
-   ```bash
+   # Jalankan Migrasi Database
    docker-compose exec app php artisan migrate --force
-   ```
-
-3. **Optimasi Laravel (Opsional tapi disarankan):**
-   ```bash
-   docker-compose exec app php artisan config:cache
-   docker-compose exec app php artisan route:cache
-   docker-compose exec app php artisan view:cache
    ```
 
 ---
 
 ## 4. Cara Update Aplikasi (Jika ada perubahan code)
 
-Setiap kali Anda selesai melakukan coding dan ingin update server:
+Setiap kali Anda selesai melakukan push image baru dari lokal:
 
-1. **Di Lokal:** Build & Push (`docker build ...` & `docker push ...`)
-2. **Di Server:**
-   ```bash
-   cd ~/docker/bros_procurement
-   docker-compose pull
-   docker-compose up -d
-   docker-compose exec app php artisan migrate --force
-   docker-compose exec app php artisan optimize
-   ```
+```bash
+cd ~/docker/bros_procurement
+docker-compose pull
+docker-compose up -d
+# Jika ada perubahan database:
+docker-compose exec app php artisan migrate --force
+# Optimasi performa:
+docker-compose exec app php artisan optimize
+```
 
 ---
 
 ## Troubleshooting
 
 * **Cek Log Aplikasi:** `docker-compose logs -f app`
+* **Error 500:** Biasanya karena permission folder storage. Pastikan sudah menjalankan `chmod -R 777 storage`.
 * **Masuk ke Kontainer:** `docker-compose exec app bash`
-* **Restart Manual:** `docker-compose restart`
