@@ -31,32 +31,35 @@
         <div class="{{ $authType }}-logo">
             <a href="{{ $dashboardUrl }}">
 
-                {{-- Logo Image --}}
-                @if (config('adminlte.auth_logo.enabled', false))
-                    <img src="{{ asset(config('adminlte.auth_logo.img.path')) }}"
-                         alt="{{ config('adminlte.auth_logo.img.alt') }}"
-                         @if (config('adminlte.auth_logo.img.class', null))
-                            class="{{ config('adminlte.auth_logo.img.class') }}"
-                         @endif
-                         @if (config('adminlte.auth_logo.img.width', null))
-                            width="{{ config('adminlte.auth_logo.img.width') }}"
-                         @endif
-                         @if (config('adminlte.auth_logo.img.height', null))
-                            height="{{ config('adminlte.auth_logo.img.height') }}"
-                         @endif>
-                @else
-                    <img src="{{ asset(config('adminlte.logo_img')) }}"
-                         alt="{{ config('adminlte.logo_img_alt') }}" height="50">
-                @endif
+                {{-- Symmetrical Logo Layout --}}
+                <div class="d-flex align-items-center justify-content-center mb-2">
+                    <div class="px-3">
+                        @if (config('adminlte.auth_logo.enabled', false))
+                            <img src="{{ asset(config('adminlte.auth_logo.img.path')) }}"
+                                 alt="{{ config('adminlte.auth_logo.img.alt') }}"
+                                 style="height: 80px; width: auto; object-fit: contain;">
+                        @else
+                            <img src="{{ asset(config('adminlte.logo_img')) }}"
+                                 alt="{{ config('adminlte.logo_img_alt') }}" 
+                                 style="height: 80px; width: auto; object-fit: contain;">
+                        @endif
+                    </div>
+                    
+                    <div class="px-3 border-left" style="border-left: 2px solid #dee2e6 !important;">
+                        <img src="{{ asset('images/logo-rsia.png') }}" 
+                             alt="RSIA Logo" 
+                             style="height: 80px; width: auto; object-fit: contain;">
+                    </div>
+                </div>
 
-                {{-- Logo Label --}}
-                {!! config('adminlte.logo', '<b>Admin</b>LTE') !!}
+                {{-- Logo Label 
+                {!! config('adminlte.logo', '<b>Admin</b>LTE') !!} --}}
 
             </a>
         </div>
 
         {{-- Card Box --}}
-        <div class="card {{ config('adminlte.classes_auth_card', 'card-outline card-primary') }}">
+        <div class="card {{ config('adminlte.classes_auth_card', 'card-outline card-primary') }} mt-4">
 
             {{-- Card Header --}}
             @hasSection('auth_header')
