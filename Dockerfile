@@ -46,9 +46,13 @@ USER root
 # Install composer dependencies
 RUN composer install --no-dev --optimize-autoloader --no-interaction
 
+# Copy .env.example as .env if .env doesn't exist
+RUN if [ ! -f .env ]; then cp .env.example .env; fi
+
 # Set permissions for Laravel
-RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache && \
-    chmod -R 775 /var/www/storage /var/www/bootstrap/cache
+RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache /var/www/.env && \
+    chmod -R 775 /var/www/storage /var/www/bootstrap/cache && \
+    chmod 664 /var/www/.env
 
 # Change back to www-data
 USER www-data
