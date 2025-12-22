@@ -40,7 +40,17 @@ COPY . /var/www
 # Copy existing application directory permissions
 COPY --chown=www-data:www-data . /var/www
 
-# Change current user to www
+# Change current user to root for installation
+USER root
+
+# Install composer dependencies
+RUN composer install --no-dev --optimize-autoloader --no-interaction
+
+# Set permissions for Laravel
+RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache && \
+    chmod -R 775 /var/www/storage /var/www/bootstrap/cache
+
+# Change back to www-data
 USER www-data
 
 # Expose port 9000 and start php-fpm server
