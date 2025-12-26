@@ -41,6 +41,7 @@ Route::prefix('reports')->name('reports.')->group(function () {
     Route::get('/outstanding', [App\Http\Controllers\ReportController::class, 'outstanding'])->name('outstanding');
     Route::get('/timeline', [App\Http\Controllers\ReportController::class, 'timeline'])->name('timeline');
     Route::get('/purchase', [App\Http\Controllers\PurchaseReportController::class, 'index'])->name('purchase');
+    Route::get('/purchase-outstanding', [App\Http\Controllers\PurchaseOutstandingReportController::class, 'index'])->name('purchase-outstanding.index');
 });
 
 Route::resource('divisions', App\Http\Controllers\DivisionController::class);

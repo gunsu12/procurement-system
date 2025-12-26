@@ -352,6 +352,11 @@ return [
             'route' => 'reports.purchase',
             'icon' => 'fas fa-fw fa-shopping-cart',
         ],
+        [
+            'text' => 'Purchase Outstanding',
+            'route' => 'reports.purchase-outstanding.index',
+            'icon' => 'fas fa-fw fa-stopwatch',
+        ],
         ['header' => 'MASTER DATA', 'can' => 'admin-only'],
         [
             'text' => 'Companies',
