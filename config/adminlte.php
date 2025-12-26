@@ -154,8 +154,8 @@ return [
 
     'layout_topnav' => null,
     'layout_boxed' => null,
-    'layout_fixed_sidebar' => null,
-    'layout_fixed_navbar' => null,
+    'layout_fixed_sidebar' => true,
+    'layout_fixed_navbar' => true,
     'layout_fixed_footer' => null,
     'layout_dark_mode' => null,
 
@@ -171,12 +171,12 @@ return [
     |
     */
 
-    'classes_auth_card' => 'card-outline card-primary',
-    'classes_auth_header' => '',
+    'classes_auth_card' => 'card-outline card-primary shadow-lg',
+    'classes_auth_header' => 'text-bold text-primary',
     'classes_auth_body' => '',
-    'classes_auth_footer' => '',
-    'classes_auth_icon' => '',
-    'classes_auth_btn' => 'btn-flat btn-primary',
+    'classes_auth_footer' => 'text-center',
+    'classes_auth_icon' => 'fa-lg text-primary',
+    'classes_auth_btn' => 'btn-flat btn-primary shadow-sm',
 
     /*
     |--------------------------------------------------------------------------
@@ -192,15 +192,15 @@ return [
 
     'classes_body' => '',
     'classes_brand' => '',
-    'classes_brand_text' => '',
-    'classes_content_wrapper' => '',
+    'classes_brand_text' => 'text-bold',
+    'classes_content_wrapper' => 'bg-light',
     'classes_content_header' => '',
     'classes_content' => '',
-    'classes_sidebar' => 'sidebar-dark-primary',
-    'classes_sidebar_nav' => '',
-    'classes_topnav' => 'navbar-white navbar-light',
+    'classes_sidebar' => 'sidebar-dark-navy elevation-4',
+    'classes_sidebar_nav' => 'nav-child-indent nav-compact nav-legacy',
+    'classes_topnav' => 'navbar-white navbar-light border-bottom shadow-sm',
     'classes_topnav_nav' => 'navbar-expand',
-    'classes_topnav_container' => 'container',
+    'classes_topnav_container' => 'container-fluid',
 
     /*
     |--------------------------------------------------------------------------
@@ -333,63 +333,72 @@ return [
         ],
         ['header' => 'REPORTS'],
         [
-            'text' => 'All Reports',
-            'route' => 'reports.index',
-            'icon' => 'fas fa-fw fa-chart-bar',
+            'text' => 'Analytics & Reports',
+            'icon' => 'fas fa-fw fa-chart-pie',
+            'submenu' => [
+                [
+                    'text' => 'Reports Overview',
+                    'route' => 'reports.index',
+                    'icon' => 'fas fa-fw fa-th-list',
+                ],
+                [
+                    'text' => 'Unit Reports',
+                    'route' => 'reports.unit',
+                    'icon' => 'fas fa-fw fa-building',
+                ],
+                [
+                    'text' => 'Outstanding Aging',
+                    'route' => 'reports.outstanding',
+                    'icon' => 'fas fa-fw fa-clock',
+                ],
+                [
+                    'text' => 'Purchase History',
+                    'route' => 'reports.purchase',
+                    'icon' => 'fas fa-fw fa-shopping-cart',
+                ],
+                [
+                    'text' => 'Purchase Outstanding',
+                    'route' => 'reports.purchase-outstanding.index',
+                    'icon' => 'fas fa-fw fa-stopwatch',
+                ],
+            ],
         ],
+        ['header' => 'ADMINISTRATION', 'can' => 'admin-only'],
         [
-            'text' => 'Unit Reports',
-            'route' => 'reports.unit',
-            'icon' => 'fas fa-fw fa-building',
-        ],
-        [
-            'text' => 'Outstanding',
-            'route' => 'reports.outstanding',
-            'icon' => 'fas fa-fw fa-clock',
-        ],
-        [
-            'text' => 'Purchase Report',
-            'route' => 'reports.purchase',
-            'icon' => 'fas fa-fw fa-shopping-cart',
-        ],
-        [
-            'text' => 'Purchase Outstanding',
-            'route' => 'reports.purchase-outstanding.index',
-            'icon' => 'fas fa-fw fa-stopwatch',
-        ],
-        ['header' => 'MASTER DATA', 'can' => 'admin-only'],
-        [
-            'text' => 'Companies',
-            'route' => 'companies.index',
-            'icon' => 'fas fa-fw fa-hospital',
+            'text' => 'Master Data',
+            'icon' => 'fas fa-fw fa-database',
             'can' => 'admin-only',
+            'submenu' => [
+                [
+                    'text' => 'Companies',
+                    'route' => 'companies.index',
+                    'icon' => 'fas fa-fw fa-hospital',
+                ],
+                [
+                    'text' => 'Divisions',
+                    'route' => 'divisions.index',
+                    'icon' => 'fas fa-fw fa-sitemap',
+                ],
+                [
+                    'text' => 'Units',
+                    'route' => 'units.index',
+                    'icon' => 'fas fa-fw fa-users',
+                ],
+                [
+                    'text' => 'Users',
+                    'route' => 'users.index',
+                    'icon' => 'fas fa-fw fa-user-cog',
+                ],
+            ],
         ],
+        ['header' => 'ACCOUNT SETTINGS'],
         [
-            'text' => 'Divisions',
-            'route' => 'divisions.index',
-            'icon' => 'fas fa-fw fa-sitemap',
-            'can' => 'admin-only',
-        ],
-        [
-            'text' => 'Units',
-            'route' => 'units.index',
-            'icon' => 'fas fa-fw fa-users',
-            'can' => 'admin-only',
-        ],
-        [
-            'text' => 'Users',
-            'route' => 'users.index',
-            'icon' => 'fas fa-fw fa-user-cog',
-            'can' => 'admin-only',
-        ],
-        ['header' => 'ACCOUNT_SETTINGS'],
-        [
-            'text' => 'profile',
+            'text' => 'Profile',
             'route' => 'profile.show',
             'icon' => 'fas fa-fw fa-user',
         ],
         [
-            'text' => 'change_password',
+            'text' => 'Change Password',
             'route' => 'profile.password',
             'icon' => 'fas fa-fw fa-lock',
         ],
