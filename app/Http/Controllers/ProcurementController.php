@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Cache;
 
 class ProcurementController extends Controller
 {
@@ -33,6 +34,23 @@ class ProcurementController extends Controller
             // Further isolation: Unit and Manager only see their own unit
             if (in_array($user->role, ['unit', 'manager'])) {
                 $query->where('unit_id', $user->unit_id);
+            }
+        }
+
+        // Default Filter Logic for Approval Workflow
+        if (!$request->has('status')) {
+            $roleDefaults = [
+                'manager' => 'submitted',
+                'budgeting' => 'approved_by_manager',
+                'director_company' => 'approved_by_budgeting',
+                'finance_manager_holding' => 'approved_by_dir_company',
+                'finance_director_holding' => 'approved_by_fin_mgr_holding',
+                'general_director_holding' => 'approved_by_fin_dir_holding',
+                'purchasing' => 'processing', // Usually purchasing works on processing items
+            ];
+
+            if (isset($roleDefaults[$user->role])) {
+                $request->merge(['status' => $roleDefaults[$user->role]]);
             }
         }
 
@@ -60,6 +78,7 @@ class ProcurementController extends Controller
         }
 
         $requests = $query->latest()->paginate(10);
+
 
         $statuses = [
             'submitted',
@@ -103,6 +122,16 @@ class ProcurementController extends Controller
     public function store(Request $request)
     {
         $user = Auth::user();
+
+        // Idempotence check
+        $idempotencyKey = $request->input('idempotency_key');
+        if ($idempotencyKey && Cache::has('procurement_idempotency_' . $idempotencyKey)) {
+            return redirect()->route('procurement.index')->with('warning', 'Request is already being processed. Please wait.');
+        }
+        if ($idempotencyKey) {
+            Cache::put('procurement_idempotency_' . $idempotencyKey, true, 60); // Expire in 60 seconds
+        }
+
         $isHighLevel = in_array($user->role, ['super_admin', 'purchasing', 'finance_manager_holding', 'finance_director_holding', 'general_director_holding']);
 
         $rules = [
@@ -198,6 +227,15 @@ class ProcurementController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
+        // Idempotence check
+        $idempotencyKey = $request->input('idempotency_key');
+        if ($idempotencyKey && Cache::has('procurement_idempotency_' . $idempotencyKey)) {
+            return redirect()->route('procurement.show', $procurement->hashid)->with('warning', 'Update is already being processed. Please wait.');
+        }
+        if ($idempotencyKey) {
+            Cache::put('procurement_idempotency_' . $idempotencyKey, true, 60); // Expire in 60 seconds
+        }
+
         $validated = $request->validate([
             'items' => 'required|array',
             'items.*.name' => 'required|string',
@@ -278,7 +316,7 @@ class ProcurementController extends Controller
     {
         // Validation role vs status logic here
         $user = Auth::user();
-        $nextStatus = $this->getNextStatus($procurement->status, $user->role);
+        $nextStatus = $this->getNextStatus($procurement->status, $user->role, $procurement->request_type, $procurement->total_amount);
 
         if (!$nextStatus) {
             return back()->with('error', 'Unauthorized action for this status.');
@@ -326,9 +364,9 @@ class ProcurementController extends Controller
         return back()->with('success', 'Request rejected.');
     }
 
-    private function getNextStatus($currentStatus, $role)
+    private function getNextStatus($currentStatus, $role, $requestType, $totalAmount)
     {
-        $map = [
+        $fullChain = [
             'submitted' => ['manager' => 'approved_by_manager'],
             'approved_by_manager' => ['budgeting' => 'approved_by_budgeting'],
             'approved_by_budgeting' => ['director_company' => 'approved_by_dir_company'],
@@ -338,6 +376,24 @@ class ProcurementController extends Controller
             'approved_by_gen_dir_holding' => ['purchasing' => 'processing'],
             'processing' => ['purchasing' => 'completed'],
         ];
+
+        $shortChain = [
+            'submitted' => ['manager' => 'approved_by_manager'],
+            'approved_by_manager' => ['budgeting' => 'approved_by_budgeting'],
+            'approved_by_budgeting' => ['purchasing' => 'processing'],
+            'processing' => ['purchasing' => 'completed'],
+        ];
+
+        // Logic:
+        // 1. Asset -> Full Chain
+        // 2. Non-Asset >= 1M -> Full Chain
+        // 3. Non-Asset < 1M -> Short Chain
+
+        $map = $fullChain; // Default to full
+
+        if ($requestType === 'nonaset' && $totalAmount < 1000000) {
+            $map = $shortChain;
+        }
 
         return $map[$currentStatus][$role] ?? null;
     }

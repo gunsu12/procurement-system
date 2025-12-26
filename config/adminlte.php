@@ -347,6 +347,11 @@ return [
             'route' => 'reports.outstanding',
             'icon' => 'fas fa-fw fa-clock',
         ],
+        [
+            'text' => 'Purchase Report',
+            'route' => 'reports.purchase',
+            'icon' => 'fas fa-fw fa-shopping-cart',
+        ],
         ['header' => 'MASTER DATA', 'can' => 'admin-only'],
         [
             'text' => 'Companies',

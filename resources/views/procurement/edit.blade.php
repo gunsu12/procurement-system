@@ -22,6 +22,7 @@
                 <form action="{{ route('procurement.update', $procurement->hashid) }}" method="POST" id="editForm" enctype="multipart/form-data">
                     @csrf
                     @method('PUT')
+                    <input type="hidden" name="idempotency_key" value="{{ \Illuminate\Support\Str::uuid() }}">
                     
                     <div class="form-group mb-3">
                         <label>Catatan / Notes</label>
@@ -405,6 +406,14 @@
                 $('#citoReason').focus();
                 return false;
             }
+
+            // Prevent double submit
+            let btn = $(this).find('button[type="submit"]');
+            if (btn.prop('disabled')) {
+                e.preventDefault();
+                return false;
+            }
+            btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Updating...');
         });
     </script>
 @stop

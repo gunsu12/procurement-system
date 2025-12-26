@@ -345,16 +345,25 @@
                         $role = $user->role;
                         $status = $procurement->status;
 
-                        $flow = [
-                            'submitted' => 'manager',
-                            'approved_by_manager' => 'budgeting',
-                            'approved_by_budgeting' => 'director_company',
-                            'approved_by_dir_company' => 'finance_manager_holding',
-                            'approved_by_fin_mgr_holding' => 'finance_director_holding',
-                            'approved_by_fin_dir_holding' => 'general_director_holding',
-                            'approved_by_gen_dir_holding' => 'purchasing',
-                            'processing' => 'purchasing',
-                        ];
+                        if ($procurement->request_type == 'nonaset' && $procurement->total_amount < 1000000) {
+                            $flow = [
+                                'submitted' => 'manager',
+                                'approved_by_manager' => 'budgeting',
+                                'approved_by_budgeting' => 'purchasing',
+                                'processing' => 'purchasing',
+                            ];
+                        } else {
+                            $flow = [
+                                'submitted' => 'manager',
+                                'approved_by_manager' => 'budgeting',
+                                'approved_by_budgeting' => 'director_company',
+                                'approved_by_dir_company' => 'finance_manager_holding',
+                                'approved_by_fin_mgr_holding' => 'finance_director_holding',
+                                'approved_by_fin_dir_holding' => 'general_director_holding',
+                                'approved_by_gen_dir_holding' => 'purchasing',
+                                'processing' => 'purchasing',
+                            ];
+                        }
 
                         $holdingRoles = ['finance_manager_holding', 'finance_director_holding', 'general_director_holding', 'super_admin'];
 
@@ -450,15 +459,15 @@
                     content = `<embed src="${url}" type="application/pdf" width="100%" height="100%">`;
                 } else {
                     content = `
-                                                    <div class="text-center text-white p-5">
-                                                        <i class="fas fa-file-download fa-5x mb-4 text-muted"></i>
-                                                        <h4>Preview not available</h4>
-                                                        <p class="mb-4">This file type cannot be previewed directly.</p>
-                                                        <a href="${url}" class="btn btn-primary" download>
-                                                            <i class="fas fa-download mr-1"></i> Download File
-                                                        </a>
-                                                    </div>
-                                                `;
+                                                        <div class="text-center text-white p-5">
+                                                            <i class="fas fa-file-download fa-5x mb-4 text-muted"></i>
+                                                            <h4>Preview not available</h4>
+                                                            <p class="mb-4">This file type cannot be previewed directly.</p>
+                                                            <a href="${url}" class="btn btn-primary" download>
+                                                                <i class="fas fa-download mr-1"></i> Download File
+                                                            </a>
+                                                        </div>
+                                                    `;
                 }
 
                 container.html(content);
@@ -549,14 +558,14 @@
                                 }).text().trim();
 
                                 nameCell.html(`
-                                            ${itemName}
-                                            <br>
-                                            <small class="text-muted">
-                                                <i class="fas fa-user"></i> ${response.checked_by}
+                                                ${itemName}
                                                 <br>
-                                                <i class="fas fa-clock"></i> ${response.checked_at}
-                                            </small>
-                                        `);
+                                                <small class="text-muted">
+                                                    <i class="fas fa-user"></i> ${response.checked_by}
+                                                    <br>
+                                                    <i class="fas fa-clock"></i> ${response.checked_at}
+                                                </small>
+                                            `);
                             } else {
                                 button.removeClass('btn-success').addClass('btn-default');
                                 button.find('i').hide();
@@ -598,9 +607,9 @@
                 const totalItems = {{ $procurement->items->count() }};
                 const checkedItems = $('.toggle-check-btn.btn-success').length;
                 $('.badge.badge-info').html(`
-                                                                <i class="fas fa-clipboard-check"></i>
-                                                                ${checkedItems} / ${totalItems} Checked
-                                                            `);
+                                                                    <i class="fas fa-clipboard-check"></i>
+                                                                    ${checkedItems} / ${totalItems} Checked
+                                                                `);
             }
         });
     </script>

@@ -1,0 +1,49 @@
+services:
+  app:
+    # HAPUS block 'build'. Kita download image jadi.
+    # build:
+    #   context: .
+    #   dockerfile: Dockerfile
+
+    # Ganti dengan nama Image Docker Hub Anda (contoh: gunsu13/bros_procurement)
+    image: gunsu13/bros_procurement:latest
+    container_name: procurement-app
+    restart: always
+    env_file:
+      - .env
+    working_dir: /var/www
+    volumes:
+      # Mounting folder storage agar file upload tidak hilang saat update image
+      - ./storage:/var/www/storage
+
+      # Share folder public bawaan Image ke Volume agar bisa dibaca Nginx
+      - public_data:/var/www/public
+    networks:
+      - app-network
+
+  web:
+    image: nginx:alpine
+    container_name: procurement-web
+    restart: always
+    ports:
+      - "9001:80"
+    volumes:
+      # Baca file statis (CSS/JS) dari Volume yang diisi oleh App
+      - public_data:/var/www/public
+
+      # Baca file upload dari Host
+      - ./storage:/var/www/storage
+
+      # Config Nginx (Pastikan file ini ada di server di path yang sama)
+      - ./docker/nginx/laravel.conf:/etc/nginx/conf.d/default.conf
+    networks:
+      - app-network
+    depends_on:
+      - app
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  public_data:

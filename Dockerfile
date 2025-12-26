@@ -34,17 +34,18 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # Set working directory
 WORKDIR /var/www
 
-# Copy existing application directory contents
-COPY . /var/www
-
-# Copy existing application directory permissions
-COPY --chown=www-data:www-data . /var/www
-
-# Change current user to root for installation
-USER root
+# Copy only composer files first for better caching
+COPY composer.json composer.lock /var/www/
 
 # Install composer dependencies
-RUN composer install --no-dev --optimize-autoloader --no-interaction
+RUN composer install --optimize-autoloader --no-interaction --no-scripts
+
+# Copy the rest of the application code
+COPY . /var/www
+COPY --chown=www-data:www-data . /var/www
+
+# Run composer scripts now that code is available
+RUN composer dump-autoload --optimize
 
 # Copy .env.example as .env if .env doesn't exist
 RUN if [ ! -f .env ]; then cp .env.example .env; fi
