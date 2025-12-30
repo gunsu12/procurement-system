@@ -175,7 +175,7 @@ class ProcurementController extends Controller
 
             if ($request->hasFile('document')) {
                 foreach ($request->file('document') as $file) {
-                    $path = $file->store('documents', 'public');
+                    $path = $file->store('documents', 's3');
                     $procurement->documents()->create([
                         'file_path' => $path,
                         'file_name' => $file->getClientOriginalName(),
@@ -261,7 +261,7 @@ class ProcurementController extends Controller
 
             if ($request->hasFile('document')) {
                 foreach ($request->file('document') as $file) {
-                    $path = $file->store('documents', 'public');
+                    $path = $file->store('documents', 's3');
                     $procurement->documents()->create([
                         'file_path' => $path,
                         'file_name' => $file->getClientOriginalName(),
@@ -444,8 +444,8 @@ class ProcurementController extends Controller
 
         try {
             // Delete file from storage
-            if (Storage::disk('public')->exists($document->file_path)) {
-                Storage::disk('public')->delete($document->file_path);
+            if (Storage::disk('s3')->exists($document->file_path)) {
+                Storage::disk('s3')->delete($document->file_path);
             }
 
             // Delete record from DB
@@ -472,8 +472,8 @@ class ProcurementController extends Controller
 
         try {
             if ($procurement->document_path) {
-                if (Storage::disk('public')->exists($procurement->document_path)) {
-                    Storage::disk('public')->delete($procurement->document_path);
+                if (Storage::disk('s3')->exists($procurement->document_path)) {
+                    Storage::disk('s3')->delete($procurement->document_path);
                 }
                 $procurement->update(['document_path' => null]);
             }
