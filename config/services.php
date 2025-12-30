@@ -30,4 +30,15 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    'oidc' => [
+        'client_id' => env('SSO_CLIENT_ID'),
+        'client_secret' => env('SSO_CLIENT_SECRET'),
+        'redirect' => env('SSO_REDIRECT_URI'),
+        'auth_base_uri' => env('SSO_BASE_URL') . '/api/oidc',
+        'authorize_uri' => '/authorize',
+        'token_uri' => '/token',
+        'userinfo_uri' => '/userinfo',
+        'scopes' => explode(',', env('SSO_SCOPES', 'openid,profile,email')),
+    ],
+
 ];

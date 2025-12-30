@@ -25,6 +25,12 @@ class User extends Authenticatable
         'role',
         'unit_id',
         'company_id',
+        'sso_id',
+        'employee_id',
+        'department',
+        'position',
+        'avatar_url',
+        'last_sso_sync',
     ];
 
     public function company()
@@ -49,7 +55,64 @@ class User extends Authenticatable
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
+        'last_sso_sync' => 'datetime',
     ];
+
+    /**
+     * Check if user is synced from SSO
+     */
+    public function isSSOUser()
+    {
+        return !empty($this->sso_id);
+    }
+
+    /**
+     * Get user by SSO ID or create new
+     */
+    public static function findOrCreateFromSSO($ssoUser)
+    {
+        $ssoId = $ssoUser->sub ?? $ssoUser->id ?? null;
+
+        if (!$ssoId) {
+            throw new \Exception('No SSO ID (sub or id) found in user info');
+        }
+
+        $user = static::where('sso_id', $ssoId)
+            ->orWhere('email', $ssoUser->email)
+            ->first();
+
+        if ($user) {
+            // Update existing user with latest SSO data
+            $user->update([
+                'sso_id' => $ssoId,
+                'name' => $ssoUser->name,
+                'email' => $ssoUser->email,
+                'employee_id' => $ssoUser->employee_id ?? null,
+                'department' => $ssoUser->department ?? null,
+                'position' => $ssoUser->position ?? null,
+                'avatar_url' => $ssoUser->avatar_url ?? null,
+                'last_sso_sync' => now(),
+            ]);
+        } else {
+            // Create new user from SSO
+            $user = static::create([
+                'sso_id' => $ssoId,
+                'name' => $ssoUser->name,
+                'email' => $ssoUser->email,
+                // Default role/unit/company might need handling here or defaulting
+                'role' => 'user', // Default role
+                'username' => explode('@', $ssoUser->email)[0], // Generate username
+                'employee_id' => $ssoUser->employee_id ?? null,
+                'department' => $ssoUser->department ?? null,
+                'position' => $ssoUser->position ?? null,
+                'avatar_url' => $ssoUser->avatar_url ?? null,
+                'password' => bcrypt(\Illuminate\Support\Str::random(32)), // Random password
+                'last_sso_sync' => now(),
+            ]);
+        }
+
+        return $user;
+    }
 
     public function unit()
     {
