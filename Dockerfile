@@ -1,66 +1,79 @@
+# Stage 1: Build Frontend Assets
+FROM node:16-alpine as frontend
+WORKDIR /app
+COPY package.json package-lock.json webpack.mix.js ./
+COPY resources ./resources
+# Copy existing public assets (images, etc)
+COPY public ./public
+RUN npm install
+RUN npm run production
+
+# Stage 2: Vendor Dependencies
+FROM composer:2 as vendor
+WORKDIR /app
+COPY composer.json composer.lock ./
+RUN composer install \
+    --no-dev \
+    --ignore-platform-reqs \
+    --no-interaction \
+    --no-scripts \
+    --prefer-dist
+
+# Stage 3: Final Production Image
 FROM php:8.1-fpm
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
-    git \
-    curl \
     libpng-dev \
     libonig-dev \
     libxml2-dev \
     libpq-dev \
+    libzip-dev \
     zip \
     unzip \
-    libzip-dev
-
-# Clear cache
-RUN apt-get clean && rm -rf /var/lib/apt/lists/*
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Install PHP extensions
 RUN docker-php-ext-install pdo_pgsql mbstring exif pcntl bcmath gd zip opcache
 
-# Standard PHP settings
+# Standard PHP settings for Production
 RUN { \
-    echo 'opcache.memory_consumption=128'; \
-    echo 'opcache.interned_strings_buffer=8'; \
-    echo 'opcache.max_accelerated_files=4000'; \
-    echo 'opcache.revalidate_freq=2'; \
+    echo 'opcache.memory_consumption=256'; \
+    echo 'opcache.interned_strings_buffer=16'; \
+    echo 'opcache.max_accelerated_files=20000'; \
+    echo 'opcache.validate_timestamps=0'; \
+    echo 'opcache.revalidate_freq=0'; \
     echo 'opcache.fast_shutdown=1'; \
     echo 'opcache.enable_cli=1'; \
     } > /usr/local/etc/php/conf.d/opcache-recommended.ini
 
-# Get latest Composer
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
-
-# Set working directory
 WORKDIR /var/www
 
-# Copy only composer files first for better caching
-COPY composer.json composer.lock /var/www/
-
-# Install composer dependencies
-RUN composer install --optimize-autoloader --no-interaction --no-scripts
-
-# Copy the rest of the application code
+# Copy App Code (excludes .dockerignore files)
 COPY . /var/www
-COPY --chown=www-data:www-data . /var/www
 
-# Run composer scripts now that code is available
-RUN composer dump-autoload --optimize
+# Copy Vendor from Stage 2
+COPY --from=vendor /app/vendor /var/www/vendor
 
-# Copy .env.example as .env if .env doesn't exist
+# Copy Compiled Assets from Stage 1
+COPY --from=frontend /app/public/css /var/www/public/css
+COPY --from=frontend /app/public/js /var/www/public/js
+COPY --from=frontend /app/mix-manifest.json /var/www/public/mix-manifest.json
+
+# Copy .env.example as .env fallback (Production usually injects this, but good for safety)
 RUN if [ ! -f .env ]; then cp .env.example .env; fi
 
-# Set permissions for Laravel
-RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache /var/www/.env && \
-    chmod -R 775 /var/www/storage /var/www/bootstrap/cache && \
-    chmod 664 /var/www/.env
+# Set permissions
+RUN chown -R www-data:www-data /var/www \
+    && chmod -R 775 /var/www/storage /var/www/bootstrap/cache
 
 # Create storage symlink
-RUN php artisan storage:link
+# Note: In production with volumes, this might need running in an entrypoint
+RUN php artisan storage:link || true
 
-# Change back to www-data
+# Switch to non-root user
 USER www-data
 
-# Expose port 9000 and start php-fpm server
+# Expose port and start
 EXPOSE 9000
 CMD ["php-fpm"]
