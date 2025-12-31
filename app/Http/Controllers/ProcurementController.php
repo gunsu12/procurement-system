@@ -483,4 +483,64 @@ class ProcurementController extends Controller
             return response()->json(['error' => 'Failed to delete document: ' . $e->getMessage()], 500);
         }
     }
+    public function rejectItem(Request $request, ProcurementItem $item)
+    {
+        $user = Auth::user();
+        $procurement = $item->procurementRequest;
+
+        // Authorization: Only manager can reject items in 'submitted' status
+        if ($user->role !== 'manager') {
+            return response()->json(['error' => 'Unauthorized role.'], 403);
+        }
+
+        if ($procurement->status !== 'submitted') {
+            return response()->json(['error' => 'Items can only be rejected in submitted status.'], 400);
+        }
+
+        if ($procurement->unit_id != $user->unit_id) {
+            return response()->json(['error' => 'Unauthorized access to this procurement request.'], 403);
+        }
+
+        $item->update([
+            'is_rejected' => true,
+            'rejection_note' => $request->input('note'),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Item rejected.',
+            'is_rejected' => true,
+            'rejection_note' => $item->rejection_note
+        ]);
+    }
+
+    public function cancelRejectItem(Request $request, ProcurementItem $item)
+    {
+        $user = Auth::user();
+        $procurement = $item->procurementRequest;
+
+        // Authorization: Only manager can reject items in 'submitted' status
+        if ($user->role !== 'manager') {
+            return response()->json(['error' => 'Unauthorized role.'], 403);
+        }
+
+        if ($procurement->status !== 'submitted') {
+            return response()->json(['error' => 'Items can only be rejected in submitted status.'], 400);
+        }
+
+        if ($procurement->unit_id != $user->unit_id) {
+            return response()->json(['error' => 'Unauthorized access to this procurement request.'], 403);
+        }
+
+        $item->update([
+            'is_rejected' => false,
+            'rejection_note' => null,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Item rejection cancelled.',
+            'is_rejected' => false
+        ]);
+    }
 }

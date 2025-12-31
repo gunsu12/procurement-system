@@ -19,12 +19,15 @@ class ProcurementItem extends Model
         'budget_info',
         'is_checked',
         'checked_at',
-        'checked_by'
+        'checked_by',
+        'is_rejected',
+        'rejection_note'
     ];
 
     protected $casts = [
         'is_checked' => 'boolean',
         'checked_at' => 'datetime',
+        'is_rejected' => 'boolean',
     ];
 
     public function procurementRequest()

@@ -253,11 +253,14 @@
                                     <th>Unit</th>
                                     <th>Subtotal</th>
                                     <th>Budget</th>
+                                    @if($procurement->status == 'submitted' && Auth::user()->role == 'manager' && $procurement->unit_id == Auth::user()->unit_id)
+                                        <th class="text-center" style="width: 80px;">Action</th>
+                                    @endif
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach ($procurement->items as $item)
-                                    <tr class="{{ $item->is_checked ? 'table-success' : '' }}"
+                                    <tr class="{{ $item->is_checked ? 'table-success' : ($item->is_rejected ? 'table-danger' : '') }}"
                                         id="item-row-{{ $item->id }}">
                                         @if($procurement->status == 'processing' && Auth::user()->role == 'purchasing')
                                             <td class="text-center" style="vertical-align: middle;">
@@ -282,6 +285,18 @@
                                                     {{ $item->checked_at ? $item->checked_at->format('d M Y H:i') : '-' }}
                                                 </small>
                                             @endif
+                                            @if($item->is_rejected)
+                                                <div class="rejection-info">
+                                                    <br>
+                                                    <small class="text-danger">
+                                                        <i class="fas fa-times-circle"></i> Rejected
+                                                        @if($item->rejection_note)
+                                                            <br>
+                                                            Note: {{ $item->rejection_note }}
+                                                        @endif
+                                                    </small>
+                                                </div>
+                                            @endif
                                         </td>
                                         <td>{{ $item->specification ?? '-' }}</td>
                                         <td>{{ $item->quantity }}</td>
@@ -293,6 +308,21 @@
                                             {{ number_format($item->subtotal, 2, ',', '.') }}
                                         </td>
                                         <td>{{ $item->budget_info ?? '-' }}</td>
+                                        @if($procurement->status == 'submitted' && Auth::user()->role == 'manager' && $procurement->unit_id == Auth::user()->unit_id)
+                                            <td class="text-center">
+                                                @if(!$item->is_rejected)
+                                                    <button type="button" class="btn btn-xs btn-danger btn-reject-item"
+                                                        data-item-id="{{ $item->id }}" title="Reject Item">
+                                                        <i class="fas fa-times"></i>
+                                                    </button>
+                                                @else
+                                                    <button type="button" class="btn btn-xs btn-secondary btn-cancel-reject-item"
+                                                        data-item-id="{{ $item->id }}" title="Cancel Rejection">
+                                                        <i class="fas fa-undo"></i>
+                                                    </button>
+                                                @endif
+                                            </td>
+                                        @endif
                                     </tr>
                                 @endforeach
                             </tbody>
@@ -303,7 +333,9 @@
                                     <td class="text-right"><strong>Rp
                                             {{ number_format($procurement->total_amount, 2, ',', '.') }}</strong>
                                     </td>
-                                    <td colspan="2"></td>
+                                    <td
+                                        colspan="{{ ($procurement->status == 'submitted' && Auth::user()->role == 'manager') ? 3 : 2 }}">
+                                    </td>
                                 </tr>
                             </tfoot>
                         </table>
@@ -437,7 +469,12 @@
     </div>
 </div>
 
+@section('css')
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+@stop
+
 @push('js')
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
     <script>
         $(document).ready(function () {
@@ -460,8 +497,8 @@
                     content = `<embed src="${url}" type="application/pdf" width="100%" height="100%">`;
                 } else if (['xls', 'xlsx'].includes(type.split('/').pop()) || type.includes('excel') || type.includes('spreadsheet')) {
                     content = `<div id="excel-preview-container" style="background: white; padding: 20px; width: 100%; height: 100%; overflow: auto;">
-                                      <div class="text-center p-3"><i class="fas fa-spinner fa-spin fa-2x"></i><br>Loading Spreadsheet...</div>
-                                   </div>`;
+                                                                          <div class="text-center p-3"><i class="fas fa-spinner fa-spin fa-2x"></i><br>Loading Spreadsheet...</div>
+                                                                       </div>`;
 
                     // Fetch and render Excel file
                     fetch(url)
@@ -473,14 +510,14 @@
                             const html = XLSX.utils.sheet_to_html(ws, { id: 'excel-table', editable: false });
 
                             $('#excel-preview-container').html(`
-                                    <div class="d-flex justify-content-between mb-2">
-                                        <h5 class="text-dark">Sheet: ${wsname}</h5>
-                                        <a href="${url}" class="btn btn-sm btn-primary" download>Download Original</a>
-                                    </div>
-                                    <div class="table-responsive bg-white">
-                                        ${html}
-                                    </div>
-                                `);
+                                                                        <div class="d-flex justify-content-between mb-2">
+                                                                            <h5 class="text-dark">Sheet: ${wsname}</h5>
+                                                                            <a href="${url}" class="btn btn-sm btn-primary" download>Download Original</a>
+                                                                        </div>
+                                                                        <div class="table-responsive bg-white">
+                                                                            ${html}
+                                                                        </div>
+                                                                    `);
 
                             // Basic styling for the generated table
                             $('#excel-table').addClass('table table-bordered table-striped table-sm text-dark');
@@ -488,26 +525,26 @@
                         .catch(err => {
                             console.error(err);
                             $('#excel-preview-container').html(`
-                                    <div class="text-center text-danger p-5">
-                                        <i class="fas fa-exclamation-triangle fa-3x mb-3"></i>
-                                        <h4>Failed to load Excel file</h4>
-                                        <p>${err.message}</p>
-                                        <a href="${url}" class="btn btn-primary mt-2" download>Download File</a>
-                                    </div>
-                                `);
+                                                                        <div class="text-center text-danger p-5">
+                                                                            <i class="fas fa-exclamation-triangle fa-3x mb-3"></i>
+                                                                            <h4>Failed to load Excel file</h4>
+                                                                            <p>${err.message}</p>
+                                                                            <a href="${url}" class="btn btn-primary mt-2" download>Download File</a>
+                                                                        </div>
+                                                                    `);
                         });
 
                 } else {
                     content = `
-                                                                    <div class="text-center text-white p-5">
-                                                                        <i class="fas fa-file-download fa-5x mb-4 text-muted"></i>
-                                                                        <h4>Preview not available</h4>
-                                                                        <p class="mb-4">This file type cannot be previewed directly.</p>
-                                                                        <a href="${url}" class="btn btn-primary" download>
-                                                                            <i class="fas fa-download mr-1"></i> Download File
-                                                                        </a>
-                                                                    </div>
-                                                                `;
+                                                                                                        <div class="text-center text-white p-5">
+                                                                                                            <i class="fas fa-file-download fa-5x mb-4 text-muted"></i>
+                                                                                                            <h4>Preview not available</h4>
+                                                                                                            <p class="mb-4">This file type cannot be previewed directly.</p>
+                                                                                                            <a href="${url}" class="btn btn-primary" download>
+                                                                                                                <i class="fas fa-download mr-1"></i> Download File
+                                                                                                            </a>
+                                                                                                        </div>
+                                                                                                    `;
                 }
 
                 container.html(content);
@@ -598,14 +635,14 @@
                                 }).text().trim();
 
                                 nameCell.html(`
-                                                            ${itemName}
-                                                            <br>
-                                                            <small class="text-muted">
-                                                                <i class="fas fa-user"></i> ${response.checked_by}
-                                                                <br>
-                                                                <i class="fas fa-clock"></i> ${response.checked_at}
-                                                            </small>
-                                                        `);
+                                                                                                ${itemName}
+                                                                                                <br>
+                                                                                                <small class="text-muted">
+                                                                                                    <i class="fas fa-user"></i> ${response.checked_by}
+                                                                                                    <br>
+                                                                                                    <i class="fas fa-clock"></i> ${response.checked_at}
+                                                                                                </small>
+                                                                                            `);
                             } else {
                                 button.removeClass('btn-success').addClass('btn-default');
                                 button.find('i').hide();
@@ -643,13 +680,80 @@
                 });
             });
 
+            // Reject Item Handler
+            $(document).on('click', '.btn-reject-item', function () {
+                let btn = $(this);
+                let itemId = btn.data('item-id');
+                let row = $('#item-row-' + itemId);
+
+                Swal.fire({
+                    title: 'Reject Item',
+                    input: 'textarea',
+                    inputPlaceholder: 'Reason for rejection...',
+                    inputAttributes: {
+                        'aria-label': 'Reason for rejection'
+                    },
+                    showCancelButton: true,
+                    confirmButtonText: 'Reject',
+                    confirmButtonColor: '#d33',
+                    showLoaderOnConfirm: true,
+                    preConfirm: (note) => {
+                        return $.ajax({
+                            url: '{{ url("/procurement/items") }}/' + itemId + '/reject',
+                            method: 'POST',
+                            data: {
+                                _token: '{{ csrf_token() }}',
+                                note: note
+                            }
+                        }).catch(error => {
+                            Swal.showValidationMessage(
+                                `Request failed: ${error.responseJSON.error || error.responseText}`
+                            );
+                            throw error; // Prevent modal from closing
+                        })
+                    },
+                    allowOutsideClick: () => !Swal.isLoading()
+                }).then((result) => {
+                    if (result.value.success === true) {
+                        toastr.success('Item rejected. Reloading...');
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 500);
+                    }
+                });
+            });
+
+            // Cancel Reject Item Handler
+            $(document).on('click', '.btn-cancel-reject-item', function () {
+                let btn = $(this);
+                let itemId = btn.data('item-id');
+                let row = $('#item-row-' + itemId);
+
+                $.ajax({
+                    url: '{{ url("/procurement/items") }}/' + itemId + '/cancel-reject',
+                    method: 'POST',
+                    data: {
+                        _token: '{{ csrf_token() }}'
+                    },
+                    success: function (response) {
+                        toastr.success('Rejection cancelled. Reloading...');
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 500);
+                    },
+                    error: function (xhr) {
+                        toastr.error(xhr.responseJSON.error || 'Failed');
+                    }
+                });
+            });
+
             function updateCheckCounter() {
                 const totalItems = {{ $procurement->items->count() }};
                 const checkedItems = $('.toggle-check-btn.btn-success').length;
                 $('.badge.badge-info').html(`
-                                                                                <i class="fas fa-clipboard-check"></i>
-                                                                                ${checkedItems} / ${totalItems} Checked
-                                                                            `);
+                                                                                                                    <i class="fas fa-clipboard-check"></i>
+                                                                                                                    ${checkedItems} / ${totalItems} Checked
+                                                                                                                `);
             }
         });
     </script>
