@@ -72,6 +72,7 @@ COPY --from=frontend --chown=www-data:www-data /app/public/mix-manifest.json /va
 # Set permissions and ensure entrypoint is executable
 RUN chown -R www-data:www-data /var/www \
     && chmod -R 775 /var/www/storage /var/www/bootstrap/cache \
+    && sed -i 's/\r$//' /var/www/docker/entrypoint.sh \
     && chmod +x /var/www/docker/entrypoint.sh
 
 # Clear stale caches and regenerate manifest
@@ -81,9 +82,6 @@ RUN rm -f /var/www/bootstrap/cache/*.php \
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
     CMD php-fpm -t || exit 1
-
-# Switch to non-root user
-USER www-data
 
 # Expose port and start
 EXPOSE 9000

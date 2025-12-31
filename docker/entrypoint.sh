@@ -21,6 +21,9 @@ if [ ! -L /var/www/public/storage ]; then
   php artisan storage:link
 fi
 
+# Ensure correct permissions
+chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache /var/www/public
+
 # Start PHP-FPM
 echo "Starting PHP-FPM..."
 exec php-fpm

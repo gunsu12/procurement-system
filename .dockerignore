@@ -21,3 +21,4 @@ bootstrap/cache/*
 !bootstrap/cache/.gitkeep
 tests/
 .phpunit.cache
+public/storage
