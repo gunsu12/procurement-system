@@ -5,7 +5,7 @@ COPY package.json package-lock.json webpack.mix.js ./
 COPY resources ./resources
 # Copy existing public assets (images, etc)
 COPY public ./public
-RUN npm ci --only=production
+RUN npm ci
 RUN npm run production
 
 # Stage 2: Vendor Dependencies
@@ -67,11 +67,16 @@ COPY --from=vendor --chown=www-data:www-data /app/vendor /var/www/vendor
 # Copy Compiled Assets from Stage 1
 COPY --from=frontend --chown=www-data:www-data /app/public/css /var/www/public/css
 COPY --from=frontend --chown=www-data:www-data /app/public/js /var/www/public/js
-COPY --from=frontend --chown=www-data:www-data /app/mix-manifest.json /var/www/public/mix-manifest.json
+COPY --from=frontend --chown=www-data:www-data /app/public/mix-manifest.json /var/www/public/mix-manifest.json
 
-# Set permissions
+# Set permissions and ensure entrypoint is executable
 RUN chown -R www-data:www-data /var/www \
-    && chmod -R 775 /var/www/storage /var/www/bootstrap/cache
+    && chmod -R 775 /var/www/storage /var/www/bootstrap/cache \
+    && chmod +x /var/www/docker/entrypoint.sh
+
+# Clear stale caches and regenerate manifest
+RUN rm -f /var/www/bootstrap/cache/*.php \
+    && php artisan package:discover --ansi
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
@@ -82,5 +87,5 @@ USER www-data
 
 # Expose port and start
 EXPOSE 9000
-CMD ["php-fpm"]
+ENTRYPOINT ["/var/www/docker/entrypoint.sh"]
 
