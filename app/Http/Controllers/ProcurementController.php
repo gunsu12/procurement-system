@@ -221,11 +221,7 @@ class ProcurementController extends Controller
 
     public function update(Request $request, ProcurementRequest $procurement)
     {
-        $user = Auth::user();
-
-        if ($procurement->user_id != $user->id || $procurement->status != 'submitted') {
-            abort(403, 'Unauthorized action.');
-        }
+        $this->authorize('update', $procurement);
 
         // Idempotence check
         $idempotencyKey = $request->input('idempotency_key');
@@ -292,21 +288,7 @@ class ProcurementController extends Controller
 
     public function show(ProcurementRequest $procurement)
     {
-        $user = Auth::user();
-        $holdingRoles = ['finance_manager_holding', 'finance_director_holding', 'general_director_holding', 'super_admin'];
-
-        // Authorization check
-        if (!in_array($user->role, $holdingRoles)) {
-            // Non-holding users must be in the same company
-            if ($procurement->company_id != $user->company_id) {
-                abort(403, 'Unauthorized access to this procurement request.');
-            }
-
-            // Unit and Manager cannot see other units' data within the same company
-            if (in_array($user->role, ['unit', 'manager']) && $procurement->unit_id != $user->unit_id) {
-                abort(403, 'Unauthorized access to this procurement request.');
-            }
-        }
+        $this->authorize('view', $procurement);
 
         $procurement->load('items.checkedBy', 'logs.user', 'company', 'unit', 'documents');
         return view('procurement.show', compact('procurement'));
@@ -314,7 +296,8 @@ class ProcurementController extends Controller
 
     public function approve(Request $request, ProcurementRequest $procurement)
     {
-        // Validation role vs status logic here
+        $this->authorize('approve', $procurement);
+
         $user = Auth::user();
         $nextStatus = $this->getNextStatus($procurement->status, $user->role, $procurement->request_type, $procurement->total_amount);
 
@@ -348,6 +331,8 @@ class ProcurementController extends Controller
 
     public function reject(Request $request, ProcurementRequest $procurement)
     {
+        $this->authorize('reject', $procurement);
+
         DB::transaction(function () use ($procurement, $request) {
             $oldStatus = $procurement->status;
             $procurement->update(['status' => 'rejected']);
@@ -400,18 +385,9 @@ class ProcurementController extends Controller
 
     public function toggleItemCheck(Request $request, ProcurementItem $item)
     {
+        $this->authorize('toggleItemCheck', $item);
+
         $user = Auth::user();
-
-        // Only purchasing team can check items
-        if ($user->role !== 'purchasing') {
-            return response()->json(['error' => 'Unauthorized'], 403);
-        }
-
-        // Only items in purchasing phase can be checked
-        $procurement = $item->procurementRequest;
-        if ($procurement->status !== 'processing') {
-            return response()->json(['error' => 'Items can only be checked in purchasing phase'], 400);
-        }
 
         // Toggle the check status
         $item->update([
@@ -430,13 +406,8 @@ class ProcurementController extends Controller
 
     public function deleteDocument(ProcurementDocument $document)
     {
-        $user = Auth::user();
         $procurement = $document->procurementRequest;
-
-        // Authorization: Only owner can delete if status is submitted
-        if ($procurement->user_id != $user->id) {
-            return response()->json(['error' => 'Unauthorized access.'], 403);
-        }
+        $this->authorize('deleteDocument', $procurement);
 
         if ($procurement->status != 'submitted') {
             return response()->json(['error' => 'Documents can only be deleted while the request is in submitted status.'], 403);
@@ -459,12 +430,7 @@ class ProcurementController extends Controller
 
     public function deleteLegacyDocument(ProcurementRequest $procurement)
     {
-        $user = Auth::user();
-
-        // Authorization
-        if ($procurement->user_id != $user->id) {
-            return response()->json(['error' => 'Unauthorized access.'], 403);
-        }
+        $this->authorize('deleteDocument', $procurement);
 
         if ($procurement->status != 'submitted') {
             return response()->json(['error' => 'Documents can only be deleted while the request is in submitted status.'], 403);
@@ -485,20 +451,12 @@ class ProcurementController extends Controller
     }
     public function rejectItem(Request $request, ProcurementItem $item)
     {
-        $user = Auth::user();
-        $procurement = $item->procurementRequest;
+        $this->authorize('rejectItem', $item);
 
-        // Authorization: Only manager can reject items in 'submitted' status
-        if ($user->role !== 'manager') {
-            return response()->json(['error' => 'Unauthorized role.'], 403);
-        }
+        $procurement = $item->procurementRequest;
 
         if ($procurement->status !== 'submitted') {
             return response()->json(['error' => 'Items can only be rejected in submitted status.'], 400);
-        }
-
-        if ($procurement->unit_id != $user->unit_id) {
-            return response()->json(['error' => 'Unauthorized access to this procurement request.'], 403);
         }
 
         $item->update([
@@ -516,20 +474,12 @@ class ProcurementController extends Controller
 
     public function cancelRejectItem(Request $request, ProcurementItem $item)
     {
-        $user = Auth::user();
-        $procurement = $item->procurementRequest;
+        $this->authorize('cancelRejectItem', $item);
 
-        // Authorization: Only manager can reject items in 'submitted' status
-        if ($user->role !== 'manager') {
-            return response()->json(['error' => 'Unauthorized role.'], 403);
-        }
+        $procurement = $item->procurementRequest;
 
         if ($procurement->status !== 'submitted') {
             return response()->json(['error' => 'Items can only be rejected in submitted status.'], 400);
-        }
-
-        if ($procurement->unit_id != $user->unit_id) {
-            return response()->json(['error' => 'Unauthorized access to this procurement request.'], 403);
         }
 
         $item->update([

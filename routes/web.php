@@ -40,11 +40,11 @@ Route::middleware(['auth', 'token.valid'])->group(function () {
         Route::put('/{procurement}', [App\Http\Controllers\ProcurementController::class, 'update'])->name('update');
         Route::post('/{procurement}/approve', [App\Http\Controllers\ProcurementController::class, 'approve'])->name('approve');
         Route::post('/{procurement}/reject', [App\Http\Controllers\ProcurementController::class, 'reject'])->name('reject');
-        Route::post('/items/{item}/toggle-check', [App\Http\Controllers\ProcurementController::class, 'toggleItemCheck'])->name('items.toggle-check');
-        Route::post('/items/{item}/reject', [App\Http\Controllers\ProcurementController::class, 'rejectItem'])->name('items.reject');
-        Route::post('/items/{item}/cancel-reject', [App\Http\Controllers\ProcurementController::class, 'cancelRejectItem'])->name('items.cancel-reject');
-        Route::delete('/documents/{document}', [App\Http\Controllers\ProcurementController::class, 'deleteDocument'])->name('documents.delete');
-        Route::delete('/{procurement}/legacy-document', [App\Http\Controllers\ProcurementController::class, 'deleteLegacyDocument'])->name('legacy-document.delete');
+        Route::post('/items/{item}/toggle-check', [App\Http\Controllers\ProcurementController::class, 'toggleItemCheck'])->name('items.toggle-check')->middleware('throttle:60,1');
+        Route::post('/items/{item}/reject', [App\Http\Controllers\ProcurementController::class, 'rejectItem'])->name('items.reject')->middleware('throttle:30,1');
+        Route::post('/items/{item}/cancel-reject', [App\Http\Controllers\ProcurementController::class, 'cancelRejectItem'])->name('items.cancel-reject')->middleware('throttle:30,1');
+        Route::delete('/documents/{document}', [App\Http\Controllers\ProcurementController::class, 'deleteDocument'])->name('documents.delete')->middleware('throttle:30,1');
+        Route::delete('/{procurement}/legacy-document', [App\Http\Controllers\ProcurementController::class, 'deleteLegacyDocument'])->name('legacy-document.delete')->middleware('throttle:30,1');
     });
 
     Route::prefix('reports')->name('reports.')->group(function () {

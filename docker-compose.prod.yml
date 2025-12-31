@@ -1,50 +1,75 @@
+version: '3.8'
+
 services:
   app:
     build:
       context: .
       dockerfile: Dockerfile
     image: procurement-app:production
-    container_name: procurement-app
-    restart: always
+    container_name: procurement-app-prod
+    restart: unless-stopped
+    environment:
+      - APP_ENV=production
+      - APP_DEBUG=false
+      - RUN_MIGRATIONS=true
     env_file:
-      - .env
+      - .env.production
     working_dir: /var/www
     volumes:
-      # Production: NO code mount (./:/var/www) for better performance and security
-      # Only mount directory for persistence
-      - ./storage:/var/www/storage
-      - ./bootstrap/cache:/var/www/bootstrap/cache
-
-      # Share public assets with Nginx
-      # Docker copies the image's /var/www/public content to this volume on first creation
-      - public_data:/var/www/public
+      - storage_data:/var/www/storage
+      - cache_data:/var/www/bootstrap/cache
     networks:
       - app-network
+    healthcheck:
+      test: ["CMD", "php-fpm", "-t"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 40s
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1024M
+        reservations:
+          cpus: '0.5'
+          memory: 512M
 
+  # Nginx Web Server
   web:
     image: nginx:alpine
-    container_name: procurement-web
-    restart: always
+    container_name: procurement-web-prod
+    restart: unless-stopped
     ports:
-      # Expose on port 80 (Standard HTTP) or keep 9001 if you have a proxy
-      - "9001:80"
+      - "${APP_PORT:-80}:80"
     volumes:
-      # Read public files from shared volume (provided by app)
-      - public_data:/var/www/public
-
-      # Allow Nginx to read storage files (symlinked from public/storage)
-      - ./storage:/var/www/storage
-
-      # Nginx Configuration
-      - ./docker/nginx/laravel.conf:/etc/nginx/conf.d/default.conf
+      - ./public:/var/www/public:ro
+      - storage_data:/var/www/storage:ro
+      - ./docker/nginx/laravel.conf:/etc/nginx/conf.d/default.conf:ro
     networks:
       - app-network
     depends_on:
       - app
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+
+volumes:
+  storage_data:
+    driver: local
+  cache_data:
+    driver: local
 
 networks:
   app-network:
     driver: bridge
 
-volumes:
-  public_data:
