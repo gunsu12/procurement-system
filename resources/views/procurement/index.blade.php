@@ -123,7 +123,21 @@
                                 <td>{{ $req->user->name }}</td>
                                 <td><small>{{ Str::limit($req->notes, 50) }}</small></td>
                                 <td class="text-right">Rp {{ number_format($req->total_amount, 2, ',', '.') }}</td>
-                                <td><span class="badge bg-secondary">{{ $req->status }}</span></td>
+                                <td>
+                                    @php
+                                        $badgeColor = 'bg-info'; // Default for submitted
+                                        if (str_contains($req->status, 'approved')) {
+                                            $badgeColor = 'badge-primary';
+                                        } elseif ($req->status === 'processing') {
+                                            $badgeColor = 'badge-warning';
+                                        } elseif ($req->status === 'rejected') {
+                                            $badgeColor = 'bg-danger';
+                                        } elseif ($req->status === 'completed') {
+                                            $badgeColor = 'bg-success';
+                                        }
+                                    @endphp
+                                    <span class="badge {{ $badgeColor }}">{{ ucfirst(str_replace('_', ' ', $req->status)) }}</span>
+                                </td>
                                 <td>
                                     <a href="{{ route('procurement.show', $req->hashid) }}"
                                         class="btn btn-sm btn-info">View</a>
