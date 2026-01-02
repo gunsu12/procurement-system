@@ -23,6 +23,7 @@ class User extends Authenticatable
         'username',
         'password',
         'role',
+        'default_item_purchasing',
         'unit_id',
         'company_id',
         'sso_id',
@@ -31,6 +32,8 @@ class User extends Authenticatable
         'position',
         'avatar_url',
         'last_sso_sync',
+        'is_first_login',
+        'password_reset_at',
     ];
 
     public function company()
@@ -56,6 +59,7 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
         'last_sso_sync' => 'datetime',
+        'password_reset_at' => 'datetime',
     ];
 
     /**
@@ -108,6 +112,7 @@ class User extends Authenticatable
                 'avatar_url' => $ssoUser->avatar_url ?? null,
                 'password' => bcrypt(\Illuminate\Support\Str::random(32)), // Random password
                 'last_sso_sync' => now(),
+                'is_first_login' => true, // Flag for password reset requirement
             ]);
         }
 

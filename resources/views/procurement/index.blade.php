@@ -61,6 +61,15 @@
                     </div>
 
                     <div class="col-md-2 mb-2">
+                        <label>Type</label>
+                        <select name="is_medical" class="form-control">
+                            <option value="">All Types</option>
+                            <option value="1" {{ request('is_medical') == '1' ? 'selected' : '' }}>Medis</option>
+                            <option value="0" {{ request('is_medical') == '0' ? 'selected' : '' }}>Non Medis</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-2 mb-2">
                         <label>Start Date</label>
                         <input type="date" name="start_date" class="form-control" value="{{ request('start_date') }}">
                     </div>

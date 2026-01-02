@@ -54,6 +54,13 @@ class ProcurementController extends Controller
             }
         }
 
+        // Auto-filter by is_medical for purchasing users based on their default preference
+        // Only apply if user has default_item_purchasing set and is_medical filter is not manually selected
+        if ($user->role === 'purchasing' && $user->default_item_purchasing && !$request->has('is_medical')) {
+            $isMedical = ($user->default_item_purchasing === 'medis') ? 1 : 0;
+            $request->merge(['is_medical' => $isMedical]);
+        }
+
         // Filter by company (for holding roles)
         if ($request->filled('company_id') && in_array($user->role, $holdingRoles)) {
             $query->where('company_id', $request->company_id);
@@ -67,6 +74,11 @@ class ProcurementController extends Controller
         // Filter by status
         if ($request->filled('status')) {
             $query->where('status', $request->status);
+        }
+
+        // Filter by is_medical (medis/non medis)
+        if ($request->has('is_medical') && $request->is_medical !== '') {
+            $query->where('is_medical', $request->is_medical);
         }
 
         // Filter by duration

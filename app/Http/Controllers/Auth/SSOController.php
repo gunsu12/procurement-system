@@ -97,6 +97,12 @@ class SSOController extends Controller
             // Login the user
             Auth::login($user, true);
 
+            // Check if this is first login from SSO
+            if ($user->is_first_login) {
+                return redirect()->route('sso.password.reset')
+                    ->with('info', 'Please set your password for security purposes.');
+            }
+
             // Redirect to intended page
             $intended = session('sso_intended', '/home');
             session()->forget(['sso_state', 'sso_nonce', 'sso_intended']);
@@ -173,5 +179,46 @@ class SSOController extends Controller
             \Log::error('Token Refresh Error: ' . $e->getMessage());
             return false;
         }
+    }
+
+    /**
+     * Show password reset form for first-time SSO users
+     */
+    public function showPasswordResetForm()
+    {
+        $user = Auth::user();
+
+        // Ensure user is logged in and needs to reset password
+        if (!$user || !$user->is_first_login) {
+            return redirect('/home');
+        }
+
+        return view('auth.sso-password-reset');
+    }
+
+    /**
+     * Update password for first-time SSO users
+     */
+    public function updatePassword(Request $request)
+    {
+        $user = Auth::user();
+
+        // Ensure user is logged in and needs to reset password
+        if (!$user || !$user->is_first_login) {
+            return redirect('/home');
+        }
+
+        $request->validate([
+            'password' => 'required|string|min:8|confirmed',
+        ]);
+
+        // Update user password and clear first login flag
+        $user->update([
+            'password' => bcrypt($request->password),
+            'is_first_login' => false,
+            'password_reset_at' => now(),
+        ]);
+
+        return redirect('/home')->with('success', 'Password set successfully! You can now use your credentials to login.');
     }
 }

@@ -26,6 +26,12 @@ Route::get('/auth/sso', [App\Http\Controllers\Auth\SSOController::class, 'redire
 Route::get('/auth/callback', [App\Http\Controllers\Auth\SSOController::class, 'handleCallback'])->name('sso.callback');
 Route::post('/logout', [App\Http\Controllers\Auth\SSOController::class, 'logout'])->name('logout');
 
+// SSO Password Reset for First-time Users
+Route::middleware(['auth'])->group(function () {
+    Route::get('/auth/sso/password/reset', [App\Http\Controllers\Auth\SSOController::class, 'showPasswordResetForm'])->name('sso.password.reset');
+    Route::post('/auth/sso/password/update', [App\Http\Controllers\Auth\SSOController::class, 'updatePassword'])->name('sso.password.update');
+});
+
 Auth::routes(['logout' => false]);
 
 Route::middleware(['auth', 'token.valid'])->group(function () {
