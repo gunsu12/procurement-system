@@ -1,0 +1,19 @@
+{
+	# Enable FrankenPHP
+	frankenphp
+	order php_server before file_server
+}
+
+:80 {
+	# Set the webroot to the public/ directory
+	root * /app/public
+	
+	# Enable compression
+	encode zstd gzip
+	
+	# Execute PHP files
+	php_server
+	
+	# Serve static files
+	file_server
+}

@@ -12,13 +12,6 @@ services:
     environment:
       # Force DB_HOST to point to the host machine
       - DB_HOST=host.docker.internal
-    networks:
-      - app-network
-
-  web:
-    extends:
-      file: docker-compose.prod.yml
-      service: web
     ports:
       # Use a different port to avoid conflict with dev (9001) or Laragon (80)
       - "8081:80"

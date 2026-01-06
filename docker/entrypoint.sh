@@ -16,15 +16,18 @@ php artisan route:cache
 php artisan view:cache
 
 # Create storage symlink if it doesn't exist
-if [ ! -L /var/www/public/storage ]; then
+if [ ! -L /app/public/storage ]; then
   echo "Creating storage symlink..."
   php artisan storage:link
 fi
 
 # Ensure correct permissions
-chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache /var/www/public
+# Note: In production with shared volumes, careful with chown if host binds are used.
+# If strictly container internal, this is fine.
+chown -R www-data:www-data /app/storage /app/bootstrap/cache /app/public
 
-# Start PHP-FPM
-echo "Starting PHP-FPM..."
-exec php-fpm
+# Start FrankenPHP
+echo "Starting FrankenPHP..."
+exec frankenphp run --config /etc/caddy/Caddyfile
+
 
