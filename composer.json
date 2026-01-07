@@ -19,6 +19,7 @@
         "laravel/ui": "^4.2",
         "league/flysystem-aws-s3-v3": "^3.0",
         "socialiteproviders/manager": "^4.0",
+        "spatie/laravel-activitylog": "^4.10",
         "vinkla/hashids": "^11.0"
     },
     "require-dev": {

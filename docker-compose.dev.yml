@@ -1,0 +1,35 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: dev
+    image: procurement-app:local
+    container_name: procurement-app
+    restart: unless-stopped
+    tty: true
+    env_file:
+      - .env
+    working_dir: /app
+    ports:
+      - "${APP_PORT:-9001}:80"
+    volumes:
+      - ./:/app
+      - /app/vendor
+      - /app/node_modules
+    networks:
+      - app-network
+    healthcheck:
+      # FrankenPHP has a built-in healthcheck usually, but simple curl/wget works
+      test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/up" ]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 40s
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  public_data:

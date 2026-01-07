@@ -12,10 +12,17 @@ class DivisionController extends Controller
         $this->middleware('auth');
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $divisions = Division::with('company')->paginate(10);
-        return view('divisions.index', compact('divisions'));
+        $query = Division::with('company');
+
+        if ($request->filled('company_id')) {
+            $query->where('company_id', $request->company_id);
+        }
+
+        $divisions = $query->paginate(10)->withQueryString();
+        $companies = \App\Models\Company::all();
+        return view('divisions.index', compact('divisions', 'companies'));
     }
 
     public function create()

@@ -5,7 +5,15 @@
 @section('content_header')
 <div class="d-flex justify-content-between">
     <h1>Companies</h1>
-    <a href="{{ route('companies.create') }}" class="btn btn-primary">Add Company</a>
+    <div>
+        <form action="{{ route('companies.sync') }}" method="POST" style="display:inline">
+            @csrf
+            <button type="submit" class="btn btn-secondary mr-2" onclick="return confirm('Sync Master Data from HRS?')">
+                <i class="fas fa-sync"></i> Sync Master Data
+            </button>
+        </form>
+        <a href="{{ route('companies.create') }}" class="btn btn-primary">Add Company</a>
+    </div>
 </div>
 @stop
 

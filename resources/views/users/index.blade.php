@@ -5,7 +5,19 @@
 @section('content_header')
 <div class="d-flex justify-content-between">
     <h1>Users</h1>
-    <a href="{{ route('users.create') }}" class="btn btn-primary">Add User</a>
+    <div class="d-flex align-items-center">
+        <form action="{{ route('users.index') }}" method="GET" class="form-inline mr-3">
+            <select name="company_id" class="form-control mr-2" onchange="this.form.submit()">
+                <option value="">Filter by Company</option>
+                @foreach($companies as $company)
+                    <option value="{{ $company->id }}" {{ request('company_id') == $company->id ? 'selected' : '' }}>
+                        {{ $company->name }}
+                    </option>
+                @endforeach
+            </select>
+        </form>
+        <a href="{{ route('users.create') }}" class="btn btn-primary">Add User</a>
+    </div>
 </div>
 @stop
 

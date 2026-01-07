@@ -13,10 +13,17 @@ class UnitController extends Controller
         $this->middleware('auth');
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $units = Unit::with('division', 'company')->paginate(10);
-        return view('units.index', compact('units'));
+        $query = Unit::with('division', 'company');
+
+        if ($request->filled('company_id')) {
+            $query->where('company_id', $request->company_id);
+        }
+
+        $units = $query->paginate(10)->withQueryString();
+        $companies = \App\Models\Company::all();
+        return view('units.index', compact('units', 'companies'));
     }
 
     public function create()

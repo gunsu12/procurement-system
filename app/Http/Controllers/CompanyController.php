@@ -12,6 +12,17 @@ class CompanyController extends Controller
         $this->middleware('auth');
     }
 
+    public function sync()
+    {
+        try {
+            \Illuminate\Support\Facades\Artisan::call('hrs:sync-master-data');
+            return redirect()->back()->with('success', 'Master Data Sync triggered successfully. Check logs for details.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Failed to trigger sync: ' . $e->getMessage());
+        }
+    }
+
+
     public function index()
     {
         $companies = Company::paginate(10);

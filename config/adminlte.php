@@ -391,6 +391,12 @@ return [
                 ],
             ],
         ],
+        [
+            'text' => 'Activity Logs',
+            'route' => 'activity-logs.index',
+            'icon' => 'fas fa-fw fa-history',
+            'can' => 'admin-only',
+        ],
         ['header' => 'ACCOUNT SETTINGS'],
         [
             'text' => 'Profile',

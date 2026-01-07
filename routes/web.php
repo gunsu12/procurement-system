@@ -66,6 +66,8 @@ Route::middleware(['auth', 'token.valid'])->group(function () {
     Route::get('/ajax/units', [App\Http\Controllers\UnitController::class, 'getUnits'])->name('ajax.units');
     Route::resource('units', App\Http\Controllers\UnitController::class);
     Route::resource('users', App\Http\Controllers\UserController::class);
+    Route::get('/activity-logs', [App\Http\Controllers\ActivityLogController::class, 'index'])->name('activity-logs.index');
+    Route::post('/companies/sync', [App\Http\Controllers\CompanyController::class, 'sync'])->name('companies.sync');
     Route::resource('companies', App\Http\Controllers\CompanyController::class);
 
     Route::get('/profile', [App\Http\Controllers\ProfileController::class, 'show'])->name('profile.show');

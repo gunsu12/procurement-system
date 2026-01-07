@@ -3,8 +3,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      target: prod
     image: procurement-app:production
-    container_name: procurement-app-prod
     restart: unless-stopped
     environment:
       - APP_ENV=production

@@ -41,4 +41,8 @@ return [
         'scopes' => explode(',', env('SSO_SCOPES', 'openid,profile,email')),
     ],
 
+    'hrs' => [
+        'endpoint' => env('HRS_SYNC_ENDPOINT'),
+        'token' => env('HRS_API_TOKEN'),
+    ],
 ];

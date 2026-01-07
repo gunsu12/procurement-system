@@ -34,8 +34,35 @@ class Handler extends ExceptionHandler
      */
     public function register()
     {
+        $this->reportable(function (\Illuminate\Validation\ValidationException $e) {
+            activity('validation_error')
+                ->causedBy(auth()->user())
+                ->withProperties([
+                    'message' => $e->getMessage(),
+                    'errors' => $e->errors(),
+                    'url' => request()->fullUrl(),
+                    'input' => request()->except(['password', 'password_confirmation']),
+                    'ip' => request()->ip(),
+                ])
+                ->log($e->getMessage());
+        });
+
         $this->reportable(function (Throwable $e) {
-            //
+            if ($e instanceof \Illuminate\Validation\ValidationException) {
+                return;
+            }
+
+            activity('server_error')
+                ->causedBy(auth()->user())
+                ->withProperties([
+                    'message' => $e->getMessage(),
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine(),
+                    'trace' => substr($e->getTraceAsString(), 0, 1000), // Limit trace size
+                    'url' => request()->fullUrl(),
+                    'ip' => request()->ip(),
+                ])
+                ->log($e->getMessage());
         });
     }
 }

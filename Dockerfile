@@ -13,15 +13,66 @@ FROM composer:2 as vendor
 WORKDIR /app
 COPY composer.json composer.lock ./
 RUN composer install \
-    --no-dev \
     --ignore-platform-reqs \
     --no-interaction \
     --no-scripts \
     --prefer-dist \
     --optimize-autoloader
 
-# Stage 3: Final Production Image
-FROM dunglas/frankenphp:php8.2
+# Stage 3: Development Image
+FROM dunglas/frankenphp:php8.2 as dev
+
+WORKDIR /app
+
+# Enable PHP development settings but keep some basics
+RUN mv "$PHP_INI_DIR/php.ini-development" "$PHP_INI_DIR/php.ini"
+
+# Install system dependencies and PHP extensions
+RUN install-php-extensions \
+    pdo_pgsql \
+    mbstring \
+    exif \
+    pcntl \
+    bcmath \
+    gd \
+    zip \
+    opcache \
+    intl
+
+# Configure PHP for Development (No OPcache validation limit)
+RUN { \
+    echo 'opcache.memory_consumption=128'; \
+    echo 'opcache.interned_strings_buffer=8'; \
+    echo 'opcache.max_accelerated_files=10000'; \
+    echo 'opcache.validate_timestamps=1'; \
+    echo 'opcache.revalidate_freq=0'; \
+    echo 'opcache.enable_cli=1'; \
+    } > $PHP_INI_DIR/conf.d/opcache-recommended.ini
+
+RUN { \
+    echo 'memory_limit=512M'; \
+    echo 'post_max_size=100M'; \
+    echo 'upload_max_filesize=100M'; \
+    echo 'max_execution_time=300'; \
+    } > $PHP_INI_DIR/conf.d/laravel.ini
+
+# Copy Caddyfile
+COPY Caddyfile /etc/caddy/Caddyfile
+
+# Copy Vendor from Stage 2 (for initial setup, though volume mount might override)
+COPY --from=vendor /app/vendor /app/vendor
+
+# Development Entrypoint
+COPY docker/entrypoint.dev.sh /usr/local/bin/entrypoint-dev.sh
+RUN chmod +x /usr/local/bin/entrypoint-dev.sh && \
+    sed -i 's/\r$//' /usr/local/bin/entrypoint-dev.sh
+
+EXPOSE 80
+ENTRYPOINT ["/usr/local/bin/entrypoint-dev.sh"]
+
+# Stage 4: Final Production Image
+FROM dunglas/frankenphp:php8.2 as prod
+
 
 # Set working directory to /app (standard for FrankenPHP)
 WORKDIR /app
