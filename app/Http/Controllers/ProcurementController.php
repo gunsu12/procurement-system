@@ -427,8 +427,11 @@ class ProcurementController extends Controller
 
         try {
             // Delete file from storage
-            if (Storage::disk('s3')->exists($document->file_path)) {
-                Storage::disk('s3')->delete($document->file_path);
+            $deleted = Storage::disk('s3')->delete($document->file_path);
+
+            if (!$deleted) {
+                \Log::error("Failed to delete file from S3 at: " . $document->file_path);
+                return response()->json(['error' => 'Storage disk refused to delete the file. Check permissions.'], 500);
             }
 
             // Delete record from DB
@@ -450,9 +453,12 @@ class ProcurementController extends Controller
 
         try {
             if ($procurement->document_path) {
-                if (Storage::disk('s3')->exists($procurement->document_path)) {
-                    Storage::disk('s3')->delete($procurement->document_path);
+                $deleted = Storage::disk('s3')->delete($procurement->document_path);
+
+                if (!$deleted) {
+                    \Log::error("Failed to delete legacy file from S3 at: " . $procurement->document_path);
                 }
+
                 $procurement->update(['document_path' => null]);
             }
 
