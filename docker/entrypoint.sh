@@ -6,17 +6,32 @@ echo "Starting application setup..."
 # Check Minio connection
 if [ -n "$AWS_ENDPOINT" ]; then
   echo "Checking Minio connection..."
-  AWS_HOST=$(echo $AWS_ENDPOINT | sed -e 's|^[^/]*//||' -e 's|:.*$||')
-  AWS_PORT=$(echo $AWS_ENDPOINT | sed -e 's|^.*:||' -e 's|/.*$||')
-  # Default port to 80 if not found
-  if [ "$AWS_PORT" = "$AWS_HOST" ]; then
-    AWS_PORT=80
+  
+  # Extract Host
+  AWS_HOST=$(echo $AWS_ENDPOINT | sed -e 's|^[^/]*//||' -e 's|:.*$||' -e 's|/.*$||')
+  
+  # Extract Port or assign default based on protocol
+  TEMP_PORT=$(echo $AWS_ENDPOINT | grep -o ':[0-9]\+' | sed 's/://')
+  
+  if [ -n "$AWS_PORT" ]; then
+    # Use explicitly defined AWS_PORT if provided
+    TARGET_PORT=$AWS_PORT
+  elif [ -n "$TEMP_PORT" ]; then
+    # Use port from ENDPOINT if present
+    TARGET_PORT=$TEMP_PORT
+  else
+    # Default based on protocol
+    case "$AWS_ENDPOINT" in
+      https://*) TARGET_PORT=443 ;;
+      *)         TARGET_PORT=80 ;;
+    esac
   fi
   
-  if php -r "\$s=@fsockopen(\"$AWS_HOST\", (int)\"$AWS_PORT\", \$errno, \$errstr, 5); if(!\$s){exit(1);}" ; then
-    echo "✅ Minio connection SUCCESSFUL ($AWS_HOST:$AWS_PORT)"
+  if php -r "\$s=@fsockopen(\"$AWS_HOST\", (int)\"$TARGET_PORT\", \$errno, \$errstr, 5); if(!\$s){exit(1);}" ; then
+    echo "✅ Minio connection SUCCESSFUL ($AWS_HOST:$TARGET_PORT)"
   else
-    echo "❌ Minio connection FAILED ($AWS_HOST:$AWS_PORT)"
+    echo "❌ Minio connection FAILED ($AWS_HOST:$TARGET_PORT)"
+    echo "Check if $AWS_ENDPOINT is reachable from this container."
   fi
 fi
 
