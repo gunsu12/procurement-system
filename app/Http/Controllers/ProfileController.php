@@ -53,4 +53,24 @@ class ProfileController extends Controller
 
         return back()->with('success', 'Password updated successfully.');
     }
+
+    public function showFirstLoginChangePassword()
+    {
+        return view('auth.first-login');
+    }
+
+    public function updateFirstLoginPassword(Request $request)
+    {
+        $request->validate([
+            'current_password' => ['required', 'current_password'],
+            'password' => ['required', 'confirmed', Password::defaults()],
+        ]);
+
+        Auth::user()->update([
+            'password' => Hash::make($request->password),
+            'is_first_login' => false,
+        ]);
+
+        return redirect()->route('home')->with('success', 'Password updated successfully.');
+    }
 }

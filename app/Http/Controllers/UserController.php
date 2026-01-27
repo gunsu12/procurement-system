@@ -7,6 +7,10 @@ use App\Models\Unit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
+use Illuminate\Support\Facades\Http;
+use App\Models\Company;
+use App\Models\Division;
+
 class UserController extends Controller
 {
     public function __construct()
@@ -120,4 +124,156 @@ class UserController extends Controller
 
         return redirect()->route('users.index')->with('success', 'User deleted successfully.');
     }
+
+    private function fetchHrsData()
+    {
+        $baseUrl = config('services.hrs.base_url', env('HRS_BASE_URL', 'http://hrs-api.local'));
+        $apiKey = config('services.hrs.api_key', env('HRS_API_KEY', 'default_key'));
+
+        return Http::withHeaders([
+            'x-api-key' => $apiKey,
+        ])->get("{$baseUrl}/sync/employees");
+    }
+
+    public function previewSync()
+    {
+        try {
+            $response = $this->fetchHrsData();
+
+            if ($response->failed()) {
+                return response()->json(['error' => 'Failed to fetch data from HRS: ' . $response->status()], 500);
+            }
+
+            $employees = $response->json();
+
+            if (!is_array($employees)) {
+                return response()->json(['error' => 'Invalid data format from HRS.'], 500);
+            }
+
+            return response()->json($employees);
+
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'An error occurred: ' . $e->getMessage()], 500);
+        }
+    }
+    public function sync(Request $request)
+    {
+        try {
+            $response = $this->fetchHrsData();
+
+            if ($response->failed()) {
+                return redirect()->back()->with('error', 'Failed to fetch data from HRS: ' . $response->status());
+            }
+
+            $employees = $response->json();
+
+
+            if (!is_array($employees)) {
+                return redirect()->back()->with('error', 'Invalid data format from HRS.');
+            }
+
+            $counters = [
+                'users_created' => 0,
+                'users_updated' => 0,
+            ];
+
+            // Get selected NIKs
+            $selectedNiks = $request->input('selected_niks', []);
+
+            if (empty($selectedNiks)) {
+                return redirect()->back()->with('error', 'No users selected for sync.');
+            }
+
+            // 2. Process each employee
+            foreach ($employees as $emp) {
+                // Skip if not in selected list
+                if (!in_array($emp['nik'], $selectedNiks)) {
+                    continue;
+                }
+
+                // Ensure Company (Site) exists
+                // Ensure Company (Site) exists
+                // Mapping: site_code (HRS) -> code (Company)
+                // Note: Company model uses 'code' and 'name'.
+                $company = Company::firstOrCreate(
+                    ['code' => $emp['site_code']],
+                    [
+                        'name' => $emp['site_name'],
+                        'is_holding' => false // Default assumption
+                    ]
+                );
+
+                // Ensure Division exists
+                // Mapping: division_code (HRS) -> code (Division)
+                $division = Division::firstOrCreate(
+                    [
+                        'code' => $emp['division_code'],
+                        'company_id' => $company->id
+                    ],
+                    [
+                        'name' => $emp['division_name']
+                    ]
+                );
+
+                // Ensure Unit exists
+                // Mapping: unit_code (HRS) -> code (Unit)
+                $unit = Unit::firstOrCreate(
+                    [
+                        'code' => $emp['unit_code'],
+                        'company_id' => $company->id
+                    ],
+                    [
+                        'name' => $emp['unit_name'],
+                        'division_id' => $division->id
+                    ]
+                );
+
+                // Ensure Unit links to Division if it was created without it or changed (optional update)
+                if ($unit->division_id !== $division->id) {
+                    $unit->update(['division_id' => $division->id]);
+                }
+
+
+                // Sync User
+                // Mapping: email (HRS) -> email (User)
+                // We use 'email' as the primary key for syncing.
+                // Could also use 'employee_id' if available in User model (added in migration)
+
+                $userData = [
+                    'name' => $emp['full_name'],
+                    // 'username' => $emp['nik'], // Assuming NIK can be username, or part of email
+                    'employee_id' => $emp['nik'],
+                    'unit_id' => $unit->id,
+                    'company_id' => $company->id,
+                    'department' => $emp['division_name'], // Mapping division name to department string
+                    'position' => $emp['unit_name'], // Mapping unit name to position string, just as a fallback
+                    // 'phone_number' => $emp['phone_number'], // If user model has phone
+                ];
+
+                $user = User::where('email', $emp['email'])->orWhere('employee_id', $emp['nik'])->first();
+
+                if ($user) {
+                    // Update
+                    $user->update($userData);
+                    $counters['users_updated']++;
+                } else {
+                    // Create
+                    $userData['email'] = $emp['email'];
+                    $userData['password'] = Hash::make('password'); // Default password
+                    $userData['is_first_login'] = true;
+                    $userData['username'] = $emp['nik']; // Set username as NIK for uniqueness
+                    $userData['role'] = 'user'; // Default role
+
+                    User::create($userData);
+                    $counters['users_created']++;
+                }
+            }
+
+            return redirect()->route('users.index')->with('success', "Sync completed. Created: {$counters['users_created']}, Updated: {$counters['users_updated']}.");
+
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'An error occurred during sync: ' . $e->getMessage());
+        }
+    }
 }
+

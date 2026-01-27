@@ -34,7 +34,7 @@ Route::middleware(['auth'])->group(function () {
 
 Auth::routes(['logout' => false]);
 
-Route::middleware(['auth', 'token.valid'])->group(function () {
+Route::middleware(['auth', 'token.valid', 'password.changed'])->group(function () {
     Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 
     Route::prefix('procurement')->name('procurement.')->group(function () {
@@ -65,6 +65,8 @@ Route::middleware(['auth', 'token.valid'])->group(function () {
     Route::resource('divisions', App\Http\Controllers\DivisionController::class);
     Route::get('/ajax/units', [App\Http\Controllers\UnitController::class, 'getUnits'])->name('ajax.units');
     Route::resource('units', App\Http\Controllers\UnitController::class);
+    Route::get('/users/sync/preview', [App\Http\Controllers\UserController::class, 'previewSync'])->name('users.sync.preview');
+    Route::post('/users/sync', [App\Http\Controllers\UserController::class, 'sync'])->name('users.sync');
     Route::resource('users', App\Http\Controllers\UserController::class);
     Route::get('/activity-logs', [App\Http\Controllers\ActivityLogController::class, 'index'])->name('activity-logs.index');
     Route::post('/companies/sync', [App\Http\Controllers\CompanyController::class, 'sync'])->name('companies.sync');
@@ -74,4 +76,8 @@ Route::middleware(['auth', 'token.valid'])->group(function () {
     Route::put('/profile', [App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
     Route::get('/profile/password', [App\Http\Controllers\ProfileController::class, 'changePassword'])->name('profile.password');
     Route::put('/profile/password', [App\Http\Controllers\ProfileController::class, 'updatePassword'])->name('profile.password.update');
+
+    // First Login Password Change Routes
+    Route::get('/auth/first-login', [App\Http\Controllers\ProfileController::class, 'showFirstLoginChangePassword'])->name('auth.first-login');
+    Route::put('/auth/first-login', [App\Http\Controllers\ProfileController::class, 'updateFirstLoginPassword'])->name('auth.first-login.update');
 });
