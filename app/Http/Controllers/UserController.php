@@ -127,33 +127,93 @@ class UserController extends Controller
 
     private function fetchHrsData()
     {
-        $baseUrl = config('services.hrs.base_url', env('HRS_BASE_URL', 'http://hrs-api.local'));
-        $apiKey = config('services.hrs.api_key', env('HRS_API_KEY', 'default_key'));
+        $baseUrl = config('services.hrs.base_url', env('HRS_BASE_URL'));
+        $apiKey = config('services.hrs.api_key', env('HRS_API_KEY'));
 
-        return Http::withHeaders([
-            'x-api-key' => $apiKey,
-        ])->get("{$baseUrl}/sync/employees");
+        \Log::info('HRS Sync: Attempting to fetch data', [
+            'base_url' => $baseUrl,
+            'api_key_present' => !empty($apiKey)
+        ]);
+
+        return Http::timeout(30)
+            ->withHeaders([
+                'x-api-key' => $apiKey,
+                'Accept' => 'application/json',
+            ])
+            ->get("{$baseUrl}/sync/employees");
     }
 
     public function previewSync()
     {
         try {
+            \Log::info('HRS Sync: Preview sync started');
+
             $response = $this->fetchHrsData();
 
             if ($response->failed()) {
-                return response()->json(['error' => 'Failed to fetch data from HRS: ' . $response->status()], 500);
+                $errorMessage = 'Failed to fetch data from HRS. Status: ' . $response->status();
+                $errorBody = $response->body();
+
+                \Log::error('HRS Sync: API request failed', [
+                    'status' => $response->status(),
+                    'body' => $errorBody
+                ]);
+
+                return response()->json([
+                    'error' => $errorMessage,
+                    'details' => $errorBody,
+                    'status_code' => $response->status()
+                ], 500);
             }
 
             $employees = $response->json();
 
             if (!is_array($employees)) {
+                \Log::error('HRS Sync: Invalid data format', [
+                    'response_type' => gettype($employees)
+                ]);
                 return response()->json(['error' => 'Invalid data format from HRS.'], 500);
             }
 
+            \Log::info('HRS Sync: Successfully fetched employees', [
+                'count' => count($employees)
+            ]);
+
             return response()->json($employees);
 
+        } catch (\Illuminate\Http\Client\ConnectionException $e) {
+            \Log::error('HRS Sync: Connection error', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return response()->json([
+                'error' => 'Connection error: Unable to reach HRS server',
+                'details' => $e->getMessage()
+            ], 500);
+
+        } catch (\Illuminate\Http\Client\RequestException $e) {
+            \Log::error('HRS Sync: Request error', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return response()->json([
+                'error' => 'Request error occurred',
+                'details' => $e->getMessage()
+            ], 500);
+
         } catch (\Exception $e) {
-            return response()->json(['error' => 'An error occurred: ' . $e->getMessage()], 500);
+            \Log::error('HRS Sync: Unexpected error', [
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return response()->json([
+                'error' => 'An unexpected error occurred',
+                'details' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
+            ], 500);
         }
     }
     public function sync(Request $request)

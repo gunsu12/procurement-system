@@ -42,7 +42,7 @@ return [
     ],
 
     'hrs' => [
-        'endpoint' => env('HRS_SYNC_ENDPOINT'),
-        'token' => env('HRS_API_TOKEN'),
+        'base_url' => env('HRS_BASE_URL'),
+        'api_key' => env('HRS_API_KEY'),
     ],
 ];
