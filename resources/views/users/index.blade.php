@@ -27,6 +27,30 @@
 @section('content')
 <div class="card">
     <div class="card-body">
+        {{-- Search Form --}}
+        <form action="{{ route('users.index') }}" method="GET" class="mb-3">
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="input-group">
+                        <input type="text" name="search" class="form-control"
+                            placeholder="Search by name, email, or username..." value="{{ request('search') }}">
+                        <input type="hidden" name="company_id" value="{{ request('company_id') }}">
+                        <div class="input-group-append">
+                            <button class="btn btn-primary" type="submit">
+                                <i class="fas fa-search"></i> Search
+                            </button>
+                            @if(request('search'))
+                                <a href="{{ route('users.index', ['company_id' => request('company_id')]) }}"
+                                    class="btn btn-secondary">
+                                    <i class="fas fa-times"></i> Clear
+                                </a>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+
         @if (session('success'))
             <div class="alert alert-success alert-dismissible fade show" role="alert">
                 {{ session('success') }}

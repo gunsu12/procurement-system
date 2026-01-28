@@ -22,8 +22,19 @@ class UserController extends Controller
     {
         $query = User::with('unit', 'company');
 
+        // Filter by company
         if ($request->filled('company_id')) {
             $query->where('company_id', $request->company_id);
+        }
+
+        // Search functionality
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'ILIKE', "%{$search}%")
+                    ->orWhere('email', 'ILIKE', "%{$search}%")
+                    ->orWhere('username', 'ILIKE', "%{$search}%");
+            });
         }
 
         $users = $query->paginate(10)->withQueryString();
