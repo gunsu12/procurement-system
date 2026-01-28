@@ -1,15 +1,15 @@
 @extends('adminlte::page')
 
-@section('title', 'Edit Request')
+@section('title', 'Edit Permohonan')
 
 @section('content_header')
 <div class="row mb-2">
     <div class="col-sm-6">
-        <h1>Edit Procurement Request: {{ $procurement->code }}</h1>
+        <h1>Edit Permohonan Pengadaan: {{ $procurement->code }}</h1>
     </div>
     <div class="col-sm-6">
         <ol class="breadcrumb float-sm-right">
-            <li class="breadcrumb-item"><a href="{{ route('procurement.index') }}" class="btn btn-default btn-sm"><i class="fas fa-arrow-left"></i> Back</a></li>
+            <li class="breadcrumb-item"><a href="{{ route('procurement.index') }}" class="btn btn-default btn-sm"><i class="fas fa-arrow-left"></i> Kembali</a></li>
         </ol>
     </div>
 </div>
@@ -78,7 +78,7 @@
                     </div>
 
                     <div class="form-group mb-3">
-                        <label>Supporting Documents</label>
+                        <label>Dokumen Pendukung</label>
                         
                         @if ($procurement->document_path || $procurement->documents->count() > 0)
                             <div class="table-responsive mb-3">
@@ -86,9 +86,9 @@
                                     <thead class="thead-light">
                                         <tr>
                                             <th style="width: 50px;">#</th>
-                                            <th>File Name</th>
-                                            <th style="width: 100px;">Size</th>
-                                            <th style="width: 120px;" class="text-center">Action</th>
+                                            <th>Nama File</th>
+                                            <th style="width: 100px;">Ukuran</th>
+                                            <th style="width: 120px;" class="text-center">Aksi</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -113,17 +113,17 @@
                                                     <button type="button" class="btn btn-xs btn-info btn-view-document"
                                                         data-url="{{ asset('storage/' . $procurement->document_path) }}"
                                                         data-type="{{ $ext }}"
-                                                        title="View">
+                                                        title="Lihat">
                                                         <i class="fas fa-eye"></i>
                                                     </button>
                                                     <a href="{{ asset('storage/' . $procurement->document_path) }}" 
-                                                       class="btn btn-xs btn-secondary" download title="Download">
+                                                       class="btn btn-xs btn-secondary" download title="Unduh">
                                                         <i class="fas fa-download"></i>
                                                     </a>
                                                     @if($procurement->user_id == Auth::id() && $procurement->status == 'submitted')
                                                         <button type="button" class="btn btn-xs btn-danger btn-delete-document" 
                                                             data-url="{{ route('procurement.legacy-document.delete', $procurement->hashid) }}"
-                                                            title="Delete">
+                                                            title="Hapus">
                                                             <i class="fas fa-trash"></i>
                                                         </button>
                                                     @endif
@@ -149,17 +149,17 @@
                                                     <button type="button" class="btn btn-xs btn-info btn-view-document"
                                                         data-url="{{ asset('storage/' . $doc->file_path) }}"
                                                         data-type="{{ $doc->mime_type ?? $ext }}"
-                                                        title="View">
+                                                        title="Lihat">
                                                         <i class="fas fa-eye"></i>
                                                     </button>
                                                     <a href="{{ asset('storage/' . $doc->file_path) }}" 
-                                                       class="btn btn-xs btn-secondary" download title="Download">
+                                                       class="btn btn-xs btn-secondary" download title="Unduh">
                                                         <i class="fas fa-download"></i>
                                                     </a>
                                                     @if($procurement->user_id == Auth::id() && $procurement->status == 'submitted')
                                                         <button type="button" class="btn btn-xs btn-danger btn-delete-document" 
                                                             data-url="{{ route('procurement.documents.delete', $doc->id) }}"
-                                                            title="Delete">
+                                                            title="Hapus">
                                                             <i class="fas fa-trash"></i>
                                                         </button>
                                                     @endif
@@ -171,22 +171,22 @@
                             </div>
                         @endif
 
-                        <label>Upload New Documents</label>
+                        <label>Unggah Dokumen Baru</label>
                         <input type="file" name="document[]" class="form-control" multiple>
-                        <small class="text-muted">Allowed types: pdf, doc, docx, xls, xlsx, jpg, png. Max: 10MB per file. You can select multiple files.</small>
+                        <small class="text-muted">Tipe yang diizinkan: pdf, doc, docx, xls, xlsx, jpg, png. Maks: 10MB per file. Anda dapat memilih beberapa file.</small>
                     </div>
 
-                    <h4>Items</h4>
+                    <h4>Daftar Barang</h4>
                     <table class="table table-bordered" id="itemsTable">
                         <thead>
                             <tr>
-                                <th>Name</th>
-                                <th>Spec</th>
-                                <th width="100px">Qty</th>
-                                <th>Est. Price</th>
-                                <th width="100px">Unit</th>
+                                <th>Nama Barang</th>
+                                <th>Spesifikasi</th>
+                                <th width="100px">Jumlah</th>
+                                <th>Est. Harga</th>
+                                <th width="100px">Satuan</th>
                                 <th>Subtotal</th>
-                                <th>Budget Info</th>
+                                <th>Info Anggaran</th>
                                 <th><button type="button" class="btn btn-sm btn-success" id="addItem">+</button></th>
                             </tr>
                         </thead>
@@ -217,8 +217,8 @@
                     </table>
 
                     <div class="d-flex justify-content-between">
-                        <a href="{{ route('procurement.show', $procurement->hashid) }}" class="btn btn-secondary">Cancel</a>
-                        <button type="submit" class="btn btn-primary">Update Request</button>
+                        <a href="{{ route('procurement.show', $procurement->hashid) }}" class="btn btn-secondary">Batal</a>
+                        <button type="submit" class="btn btn-primary">Perbarui Permohonan</button>
                     </div>
                 </form>
             </div>
@@ -229,7 +229,7 @@
         <div class="modal-dialog modal-xl" role="document" style="height: 95vh;">
             <div class="modal-content h-100">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="documentPreviewModalLabel">Document Preview</h5>
+                    <h5 class="modal-title" id="documentPreviewModalLabel">Pratinjau Dokumen</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
@@ -266,10 +266,10 @@
                     content = `
                         <div class="text-center text-white p-5">
                             <i class="fas fa-file-download fa-5x mb-4 text-muted"></i>
-                            <h4>Preview not available</h4>
-                            <p class="mb-4">This file type cannot be previewed directly.</p>
+                            <h4>Pratinjau tidak tersedia</h4>
+                            <p class="mb-4">Tipe file ini tidak dapat ditampilkan pratinjau secara langsung.</p>
                             <a href="${url}" class="btn btn-primary" download>
-                                <i class="fas fa-download mr-1"></i> Download File
+                                <i class="fas fa-download mr-1"></i> Unduh File
                             </a>
                         </div>
                     `;
@@ -285,13 +285,13 @@
                 const row = btn.closest('tr');
 
                 Swal.fire({
-                    title: 'Delete Document?',
-                    text: "This action cannot be undone!",
+                    title: 'Hapus Dokumen?',
+                    text: "Tindakan ini tidak dapat dibatalkan!",
                     type: 'warning',
                     showCancelButton: true,
                     confirmButtonColor: '#d33',
                     cancelButtonColor: '#3085d6',
-                    confirmButtonText: 'Yes, delete it!'
+                    confirmButtonText: 'Ya, hapus!'
                 }).then((result) => {
                     if (result.value) {
                         btn.prop('disabled', true);
@@ -306,7 +306,7 @@
                             success: function(response) {
                                 if (response.success) {
                                     Swal.fire(
-                                        'Deleted!',
+                                        'Terhapus!',
                                         response.success,
                                         'success'
                                     );
@@ -314,12 +314,12 @@
                                         $(this).remove();
                                     });
                                 } else {
-                                    Swal.fire('Error!', response.error || 'Failed to delete', 'error');
+                                    Swal.fire('Error!', response.error || 'Gagal menghapus', 'error');
                                     btn.prop('disabled', false);
                                 }
                             },
                             error: function(xhr) {
-                                let msg = 'Failed to delete document';
+                                let msg = 'Gagal menghapus dokumen';
                                 if (xhr.responseJSON && xhr.responseJSON.error) msg = xhr.responseJSON.error;
                                 Swal.fire('Error!', msg, 'error');
                                 btn.prop('disabled', false);
@@ -413,7 +413,7 @@
                 e.preventDefault();
                 return false;
             }
-            btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Updating...');
+            btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Memperbarui...');
         });
     </script>
 @stop

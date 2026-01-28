@@ -1,6 +1,6 @@
 @extends('adminlte::master')
 
-@section('title', 'Change Password')
+@section('title', 'Ubah Kata Sandi')
 
 @section('adminlte_css')
 @yield('css')
@@ -12,12 +12,12 @@
         <div class="col-md-8">
             <div class="text-center mb-4">
                 <h2><b>BROS</b> Hospital</h2>
-                <p class="text-muted">Please update your password to continue.</p>
+                <p class="text-muted">Silakan perbarui kata sandi Anda untuk melanjutkan.</p>
             </div>
 
             <div class="card card-danger">
                 <div class="card-header">
-                    <h3 class="card-title">Security Settings</h3>
+                    <h3 class="card-title">Pengaturan Keamanan</h3>
                 </div>
                 <form action="{{ route('auth.first-login.update') }}" method="POST">
                     @csrf
@@ -41,7 +41,7 @@
                         @endif
 
                         <div class="form-group">
-                            <label for="current_password">Current Password</label>
+                            <label for="current_password">Kata Sandi Saat Ini</label>
                             <input type="password" name="current_password" id="current_password"
                                 class="form-control @error('current_password') is-invalid @enderror" required>
                             @error('current_password')
@@ -50,7 +50,7 @@
                         </div>
 
                         <div class="form-group">
-                            <label for="password">New Password</label>
+                            <label for="password">Kata Sandi Baru</label>
                             <input type="password" name="password" id="password"
                                 class="form-control @error('password') is-invalid @enderror" required>
                             @error('password')
@@ -59,7 +59,7 @@
                         </div>
 
                         <div class="form-group">
-                            <label for="password_confirmation">Confirm New Password</label>
+                            <label for="password_confirmation">Konfirmasi Kata Sandi Baru</label>
                             <input type="password" name="password_confirmation" id="password_confirmation"
                                 class="form-control" required>
                         </div>
@@ -67,9 +67,9 @@
                     <div class="card-footer d-flex justify-content-end">
                         <button type="button" class="btn btn-default mr-2"
                             onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-                            Cancel
+                            Batal
                         </button>
-                        <button type="submit" class="btn btn-danger">Update Password</button>
+                        <button type="submit" class="btn btn-danger">Perbarui Kata Sandi</button>
                     </div>
                 </form>
 

@@ -1,15 +1,15 @@
 @extends('adminlte::page')
 
-@section('title', 'Procurement Requests')
+@section('title', 'Permohonan Pengadaan')
 
 @section('content_header')
-<h1>Procurement Requests</h1>
+<h1>Permohonan Pengadaan</h1>
 @stop
 
 @section('content')
 <div class="container-fluid">
     @if (Auth::user()->role == 'unit')
-        <a href="{{ route('procurement.create') }}" class="btn btn-primary mb-3">Create Request</a>
+        <a href="{{ route('procurement.create') }}" class="btn btn-primary mb-3">Buat Permohonan</a>
     @endif
 
     <div class="card mb-3">
@@ -18,9 +18,9 @@
                 <div class="row">
                     @if (isset($companies) && $companies->count() > 0)
                         <div class="col-md-3 mb-2">
-                            <label>Company</label>
+                            <label>Perusahaan</label>
                             <select name="company_id" class="form-control">
-                                <option value="">All Companies</option>
+                                <option value="">Semua Perusahaan</option>
                                 @foreach ($companies as $c)
                                     <option value="{{ $c->id }}" {{ request('company_id') == $c->id ? 'selected' : '' }}>
                                         {{ $c->name }}
@@ -34,7 +34,7 @@
                         <div class="col-md-3 mb-2">
                             <label>Unit</label>
                             <select name="unit_id" class="form-control" {{ !request('company_id') ? 'disabled' : '' }}>
-                                <option value="">All Units</option>
+                                <option value="">Semua Unit</option>
                                 @foreach ($units->groupBy('company.name') as $companyName => $companyUnits)
                                     <optgroup label="{{ $companyName ?: 'No Company' }}">
                                         @foreach ($companyUnits as $u)
@@ -51,7 +51,7 @@
                     <div class="col-md-2 mb-2">
                         <label>Status</label>
                         <select name="status" class="form-control">
-                            <option value="">All Statuses</option>
+                            <option value="">Semua Status</option>
                             @foreach ($statuses as $status)
                                 <option value="{{ $status }}" {{ request('status') == $status ? 'selected' : '' }}>
                                     {{ ucfirst(str_replace('_', ' ', $status)) }}
@@ -61,21 +61,21 @@
                     </div>
 
                     <div class="col-md-2 mb-2">
-                        <label>Type</label>
+                        <label>Tipe</label>
                         <select name="is_medical" class="form-control">
-                            <option value="">All Types</option>
+                            <option value="">Semua Tipe</option>
                             <option value="1" {{ request('is_medical') == '1' ? 'selected' : '' }}>Medis</option>
                             <option value="0" {{ request('is_medical') == '0' ? 'selected' : '' }}>Non Medis</option>
                         </select>
                     </div>
 
                     <div class="col-md-2 mb-2">
-                        <label>Start Date</label>
+                        <label>Tanggal Mulai</label>
                         <input type="date" name="start_date" class="form-control" value="{{ request('start_date') }}">
                     </div>
 
                     <div class="col-md-2 mb-2">
-                        <label>End Date</label>
+                        <label>Tanggal Akhir</label>
                         <input type="date" name="end_date" class="form-control" value="{{ request('end_date') }}">
                     </div>
                 </div>
@@ -97,15 +97,15 @@
                 <table class="table table-bordered">
                     <thead>
                         <tr>
-                            <th>Code</th>
-                            <th>Date</th>
-                            <th>Company</th>
+                            <th>Kode</th>
+                            <th>Tanggal</th>
+                            <th>Perusahaan</th>
                             <th>Unit</th>
-                            <th>Requester</th>
-                            <th>Notes</th>
+                            <th>Pemohon</th>
+                            <th>Catatan</th>
                             <th>Total</th>
                             <th>Status</th>
-                            <th>Action</th>
+                            <th>Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -140,7 +140,7 @@
                                 </td>
                                 <td>
                                     <a href="{{ route('procurement.show', $req->hashid) }}"
-                                        class="btn btn-sm btn-info">View</a>
+                                        class="btn btn-sm btn-info">Lihat</a>
                                     @if($req->status == 'submitted' && $req->user_id == Auth::id())
                                         <a href="{{ route('procurement.edit', $req->hashid) }}"
                                             class="btn btn-sm btn-warning">Edit</a>
@@ -177,7 +177,7 @@
                 if (!companyId) {
                     unitSelect.prop('disabled', true);
                     unitSelect.empty();
-                    unitSelect.append('<option value="">All Units</option>');
+                    unitSelect.append('<option value="">Semua Unit</option>');
                     return;
                 } else {
                     unitSelect.prop('disabled', false);
@@ -190,7 +190,7 @@
                     },
                     success: function (units) {
                         unitSelect.empty();
-                        unitSelect.append('<option value="">All Units</option>');
+                        unitSelect.append('<option value="">Semua Unit</option>');
 
                         $.each(units, function (key, unit) {
                             var selected = (unit.id == currentUnit) ? 'selected' : '';

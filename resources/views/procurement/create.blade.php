@@ -1,16 +1,16 @@
 @extends('adminlte::page')
 
-@section('title', 'Create Request')
+@section('title', 'Buat Permohonan')
 
 @section('content_header')
 <div class="row mb-2">
     <div class="col-sm-6">
-        <h1>Create Procurement Request</h1>
+        <h1>Buat Permohonan Pengadaan</h1>
     </div>
     <div class="col-sm-6">
         <ol class="breadcrumb float-sm-right">
             <li class="breadcrumb-item"><a href="{{ route('home') }}" class="btn btn-default btn-sm"><i
-                        class="fas fa-arrow-left"></i> Back to Dashboard</a></li>
+                        class="fas fa-arrow-left"></i> Kembali ke Dashboard</a></li>
         </ol>
     </div>
 </div>
@@ -94,23 +94,24 @@
                 </div>
 
                 <div class="form-group mb-3">
-                    <label>Supporting Documents</label>
+                    <label>Dokumen Pendukung</label>
                     <input type="file" name="document[]" class="form-control" multiple>
-                    <small class="text-muted">Allowed types: pdf, doc, docx, xls, xlsx, jpg, png. Max: 10MB per file.
-                        You can select multiple files.</small>
+                    <small class="text-muted">Tipe yang diizinkan: pdf, doc, docx, xls, xlsx, jpg, png. Maks: 10MB per
+                        file.
+                        Anda dapat memilih beberapa file.</small>
                 </div>
 
-                <h4>Items</h4>
+                <h4>Daftar Barang</h4>
                 <table class="table table-bordered" id="itemsTable">
                     <thead>
                         <tr>
-                            <th>Name</th>
-                            <th>Spec</th>
-                            <th width="100px">Qty</th>
-                            <th>Est. Price</th>
-                            <th width="100px">Unit</th>
+                            <th>Nama Barang</th>
+                            <th>Spesifikasi</th>
+                            <th width="100px">Jumlah</th>
+                            <th>Est. Harga</th>
+                            <th width="100px">Satuan</th>
                             <th>Subtotal</th>
-                            <th>Budget Info</th>
+                            <th>Info Anggaran</th>
                             <th><button type="button" class="btn btn-sm btn-success" id="addItem">+</button></th>
                         </tr>
                     </thead>
@@ -139,8 +140,8 @@
                 </table>
 
                 <div class="d-flex justify-content-between">
-                    <a href="{{ route('procurement.index') }}" class="btn btn-secondary">Back</a>
-                    <button type="submit" class="btn btn-primary">Submit Request</button>
+                    <a href="{{ route('procurement.index') }}" class="btn btn-secondary">Kembali</a>
+                    <button type="submit" class="btn btn-primary">Kirim Permohonan</button>
                 </div>
             </form>
         </div>
@@ -228,7 +229,7 @@
             e.preventDefault();
             return false;
         }
-        btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Submitting...');
+        btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Mengirim...');
     });
 </script>
 @stop

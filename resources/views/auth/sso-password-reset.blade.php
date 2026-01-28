@@ -1,12 +1,12 @@
 @extends('adminlte::auth.auth-page')
 
-@section('auth_header', 'Set Your Password')
+@section('auth_header', 'Atur Kata Sandi Anda')
 
 @section('auth_body')
 <div class="alert alert-info">
     <i class="fas fa-info-circle"></i>
-    Welcome! Since this is your first time logging in via SSO, please set a password for your account.
-    This password will be used for future local logins.
+    Selamat datang! Karena ini adalah kali pertama Anda masuk melalui SSO, silakan atur kata sandi untuk akun Anda.
+    Kata sandi ini akan digunakan untuk login lokal di masa mendatang.
 </div>
 
 <form action="{{ route('sso.password.update') }}" method="post">
@@ -15,7 +15,7 @@
     {{-- Password field --}}
     <div class="input-group mb-3">
         <input type="password" name="password" class="form-control @error('password') is-invalid @enderror"
-            placeholder="Password" required autofocus>
+            placeholder="Kata Sandi" required autofocus>
         <div class="input-group-append">
             <div class="input-group-text">
                 <span class="fas fa-lock"></span>
@@ -30,7 +30,7 @@
 
     {{-- Password confirmation field --}}
     <div class="input-group mb-3">
-        <input type="password" name="password_confirmation" class="form-control" placeholder="Confirm Password"
+        <input type="password" name="password_confirmation" class="form-control" placeholder="Konfirmasi Kata Sandi"
             required>
         <div class="input-group-append">
             <div class="input-group-text">
@@ -41,7 +41,7 @@
 
     {{-- Set password button --}}
     <button type="submit" class="btn btn-primary btn-block">
-        <i class="fas fa-check"></i> Set Password
+        <i class="fas fa-check"></i> Atur Kata Sandi
     </button>
 
 </form>
@@ -49,6 +49,6 @@
 
 @section('auth_footer')
 <p class="text-muted text-center mt-3">
-    <small>Password must be at least 8 characters long.</small>
+    <small>Kata sandi harus minimal 8 karakter.</small>
 </p>
 @stop

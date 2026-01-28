@@ -1,13 +1,13 @@
 @extends('adminlte::page')
 
-@section('title', 'Request Details')
+@section('title', 'Detail Permohonan')
 
 @section('content_header')
 <div class="d-flex justify-content-between">
-    <h1>Request Details: {{ $procurement->code }}</h1>
+    <h1>Detail Permohonan: {{ $procurement->code }}</h1>
     <a href="{{ url()->previous() == url()->current() ? route('procurement.index') : url()->previous() }}"
         class="btn btn-secondary">
-        <i class="fas fa-arrow-left"></i> Back
+        <i class="fas fa-arrow-left"></i> Kembali
     </a>
 </div>
 @stop
@@ -36,7 +36,7 @@
         <div class="col-md-8">
             <div class="card mb-3">
                 <div class="card-header">
-                    <h3 class="card-title">Details</h3>
+                    <h3 class="card-title">Detail</h3>
                     <div class="card-tools">
                         @php
                             $statusColors = [
@@ -60,19 +60,19 @@
                 <div class="card-body">
                     <div class="row mb-3">
                         <div class="col-md-4">
-                            <p class="mb-2"><strong>Company:</strong> {{ $procurement->company->name ?? '-' }}</p>
+                            <p class="mb-2"><strong>Perusahaan:</strong> {{ $procurement->company->name ?? '-' }}</p>
                         </div>
                         <div class="col-md-4">
                             <p class="mb-2"><strong>Unit:</strong> {{ $procurement->unit->name }}</p>
                         </div>
                         <div class="col-md-4">
-                            <p class="mb-2"><strong>Requester:</strong> {{ $procurement->user->name }}</p>
+                            <p class="mb-2"><strong>Pemohon:</strong> {{ $procurement->user->name }}</p>
                         </div>
                     </div>
 
                     <div class="row mb-3">
                         <div class="col-md-6">
-                            <p class="mb-2"><strong>Date:</strong>
+                            <p class="mb-2"><strong>Tanggal:</strong>
                                 {{ $procurement->created_at->format('Y-m-d H:i:s') }}</p>
                         </div>
                         <div class="col-md-6">
@@ -126,15 +126,15 @@
                     @if ($procurement->document_path || $procurement->documents->count() > 0)
                         <div class="row mb-3">
                             <div class="col-md-12">
-                                <p class="mb-2"><strong>Supporting Documents:</strong></p>
+                                <p class="mb-2"><strong>Dokumen Pendukung:</strong></p>
                                 <div class="table-responsive">
                                     <table class="table table-bordered table-sm">
                                         <thead class="thead-light">
                                             <tr>
                                                 <th style="width: 50px;">#</th>
-                                                <th>File Name</th>
-                                                <th style="width: 100px;">Size</th>
-                                                <th style="width: 120px;" class="text-center">Action</th>
+                                                <th>Nama File</th>
+                                                <th style="width: 100px;">Ukuran</th>
+                                                <th style="width: 120px;" class="text-center">Aksi</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -162,17 +162,17 @@
                                                     <td class="text-center">
                                                         <button type="button" class="btn btn-xs btn-info btn-view-document"
                                                             data-url="{{ Storage::disk('s3')->temporaryUrl($procurement->document_path, now()->addMinutes(20)) }}"
-                                                            data-type="{{ $ext }}" title="View">
+                                                            data-type="{{ $ext }}" title="Lihat">
                                                             <i class="fas fa-eye"></i>
                                                         </button>
                                                         <a href="{{ Storage::disk('s3')->temporaryUrl($procurement->document_path, now()->addMinutes(20)) }}"
-                                                            class="btn btn-xs btn-secondary" download title="Download">
+                                                            class="btn btn-xs btn-secondary" download title="Unduh">
                                                             <i class="fas fa-download"></i>
                                                         </a>
                                                         @if($procurement->user_id == Auth::id() && $procurement->status == 'submitted')
                                                             <button type="button" class="btn btn-xs btn-danger btn-delete-document"
                                                                 data-url="{{ route('procurement.legacy-document.delete', $procurement->hashid) }}"
-                                                                title="Delete">
+                                                                title="Hapus">
                                                                 <i class="fas fa-trash"></i>
                                                             </button>
                                                         @endif
@@ -201,17 +201,17 @@
                                                     <td class="text-center">
                                                         <button type="button" class="btn btn-xs btn-info btn-view-document"
                                                             data-url="{{ Storage::disk('s3')->temporaryUrl($doc->file_path, now()->addMinutes(20)) }}"
-                                                            data-type="{{ $doc->mime_type ?? $ext }}" title="View">
+                                                            data-type="{{ $doc->mime_type ?? $ext }}" title="Lihat">
                                                             <i class="fas fa-eye"></i>
                                                         </button>
                                                         <a href="{{ Storage::disk('s3')->temporaryUrl($doc->file_path, now()->addMinutes(20)) }}"
-                                                            class="btn btn-xs btn-secondary" download title="Download">
+                                                            class="btn btn-xs btn-secondary" download title="Unduh">
                                                             <i class="fas fa-download"></i>
                                                         </a>
                                                         @if($procurement->user_id == Auth::id() && $procurement->status == 'submitted')
                                                             <button type="button" class="btn btn-xs btn-danger btn-delete-document"
                                                                 data-url="{{ route('procurement.documents.delete', $doc->id) }}"
-                                                                title="Delete">
+                                                                title="Hapus">
                                                                 <i class="fas fa-trash"></i>
                                                             </button>
                                                         @endif
@@ -228,12 +228,12 @@
                     <hr>
 
                     <h5 class="mb-3">
-                        Items
+                        Daftar Barang
                         @if($procurement->status == 'processing')
                             <span class="badge badge-info ml-2">
                                 <i class="fas fa-clipboard-check"></i>
                                 {{ $procurement->items->where('is_checked', true)->count() }} /
-                                {{ $procurement->items->count() }} Checked
+                                {{ $procurement->items->count() }} Diperiksa
                             </span>
                         @endif
                     </h5>
@@ -246,15 +246,15 @@
                                             <i class="fas fa-check-circle text-success"></i>
                                         </th>
                                     @endif
-                                    <th>Name</th>
-                                    <th>Spec</th>
-                                    <th>Qty</th>
-                                    <th>Est. Price</th>
-                                    <th>Unit</th>
+                                    <th>Nama Barang</th>
+                                    <th>Spesifikasi</th>
+                                    <th>Jumlah</th>
+                                    <th>Est. Harga</th>
+                                    <th>Satuan</th>
                                     <th>Subtotal</th>
-                                    <th>Budget</th>
+                                    <th>Anggaran</th>
                                     @if($procurement->status == 'submitted' && Auth::user()->role == 'manager' && $procurement->unit_id == Auth::user()->unit_id)
-                                        <th class="text-center" style="width: 80px;">Action</th>
+                                        <th class="text-center" style="width: 80px;">Aksi</th>
                                     @endif
                                 </tr>
                             </thead>
@@ -268,7 +268,7 @@
                                                     class="btn {{ $item->is_checked ? 'btn-success' : 'btn-default' }} toggle-check-btn"
                                                     data-item-id="{{ $item->id }}"
                                                     style="width: 28px; height: 28px; padding: 0; border-radius: 4px; border: 2px solid #28a745; transition: all 0.2s;"
-                                                    title="{{ $item->is_checked ? 'Uncheck item' : 'Check item' }}">
+                                                    title="{{ $item->is_checked ? 'Hapus centang' : 'Centang item' }}">
                                                     <i class="fas fa-check"
                                                         style="{{ $item->is_checked ? '' : 'display: none;' }} font-size: 0.8rem;"></i>
                                                 </button>
@@ -289,10 +289,10 @@
                                                 <div class="rejection-info">
                                                     <br>
                                                     <small class="text-danger">
-                                                        <i class="fas fa-times-circle"></i> Rejected
+                                                        <i class="fas fa-times-circle"></i> Ditolak
                                                         @if($item->rejection_note)
                                                             <br>
-                                                            Note: {{ $item->rejection_note }}
+                                                            Catatan: {{ $item->rejection_note }}
                                                         @endif
                                                     </small>
                                                 </div>
@@ -312,12 +312,12 @@
                                             <td class="text-center">
                                                 @if(!$item->is_rejected)
                                                     <button type="button" class="btn btn-xs btn-danger btn-reject-item"
-                                                        data-item-id="{{ $item->id }}" title="Reject Item">
+                                                        data-item-id="{{ $item->id }}" title="Tolak Item">
                                                         <i class="fas fa-times"></i>
                                                     </button>
                                                 @else
                                                     <button type="button" class="btn btn-xs btn-secondary btn-cancel-reject-item"
-                                                        data-item-id="{{ $item->id }}" title="Cancel Rejection">
+                                                        data-item-id="{{ $item->id }}" title="Batal Tolak">
                                                         <i class="fas fa-undo"></i>
                                                     </button>
                                                 @endif
@@ -345,7 +345,7 @@
 
             <div class="card">
                 <div class="card-header">
-                    <h3 class="card-title">Approval History</h3>
+                    <h3 class="card-title">Riwayat Persetujuan</h3>
                 </div>
                 <div class="card-body">
                     <ul>
@@ -368,7 +368,7 @@
         <div class="col-md-4">
             <div class="card">
                 <div class="card-header">
-                    <h3 class="card-title">Actions</h3>
+                    <h3 class="card-title">Aksi</h3>
                 </div>
                 <div class="card-body">
                     @php
@@ -417,7 +417,7 @@
 
                     @if ($procurement->status == 'submitted' && $procurement->user_id == Auth::id())
                         <a href="{{ route('procurement.edit', $procurement->hashid) }}" class="btn btn-warning w-100 mb-3">
-                            <i class="fas fa-edit"></i> Edit Request
+                            <i class="fas fa-edit"></i> Edit Permohonan
                         </a>
                     @endif
 
@@ -425,21 +425,21 @@
                         <form action="{{ route('procurement.approve', $procurement->hashid) }}" method="POST" class="mb-2">
                             @csrf
                             <div class="form-group mb-2">
-                                <textarea name="note" class="form-control" placeholder="Reason/Note" required></textarea>
+                                <textarea name="note" class="form-control" placeholder="Alasan/Catatan" required></textarea>
                             </div>
-                            <button type="submit" class="btn btn-success w-100">Approve / Progress</button>
+                            <button type="submit" class="btn btn-success w-100">Setujui / Proses</button>
                         </form>
 
                         <form action="{{ route('procurement.reject', $procurement->hashid) }}" method="POST">
                             @csrf
                             <div class="form-group mb-2">
-                                <textarea name="note" class="form-control" placeholder="Rejection Reason"
+                                <textarea name="note" class="form-control" placeholder="Alasan Penolakan"
                                     required></textarea>
                             </div>
-                            <button type="submit" class="btn btn-danger w-100">Reject</button>
+                            <button type="submit" class="btn btn-danger w-100">Tolak</button>
                         </form>
                     @else
-                        <p class="text-muted">No actions available for you.</p>
+                        <p class="text-muted">Tidak ada aksi yang tersedia untuk Anda.</p>
                     @endif
                 </div>
             </div>
@@ -456,7 +456,7 @@
     <div class="modal-dialog modal-xl" role="document" style="height: 95vh;">
         <div class="modal-content h-100">
             <div class="modal-header">
-                <h5 class="modal-title" id="documentPreviewModalLabel">Document Preview</h5>
+                <h5 class="modal-title" id="documentPreviewModalLabel">Pratinjau Dokumen</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
@@ -495,8 +495,8 @@
                     content = `<embed src="${url}" type="application/pdf" width="100%" height="100%">`;
                 } else if (['xls', 'xlsx'].includes(type.split('/').pop()) || type.includes('excel') || type.includes('spreadsheet')) {
                     content = `<div id="excel-preview-container" style="background: white; padding: 20px; width: 100%; height: 100%; overflow: auto;">
-                                                                              <div class="text-center p-3"><i class="fas fa-spinner fa-spin fa-2x"></i><br>Loading Spreadsheet...</div>
-                                                                           </div>`;
+                                                                                                                          <div class="text-center p-3"><i class="fas fa-spinner fa-spin fa-2x"></i><br>Memuat Spreadsheet...</div>
+                                                                                                                       </div>`;
 
                     // Fetch and render Excel file
                     fetch(url)
@@ -508,14 +508,14 @@
                             const html = XLSX.utils.sheet_to_html(ws, { id: 'excel-table', editable: false });
 
                             $('#excel-preview-container').html(`
-                                                                            <div class="d-flex justify-content-between mb-2">
-                                                                                <h5 class="text-dark">Sheet: ${wsname}</h5>
-                                                                                <a href="${url}" class="btn btn-sm btn-primary" download>Download Original</a>
-                                                                            </div>
-                                                                            <div class="table-responsive bg-white">
-                                                                                ${html}
-                                                                            </div>
-                                                                        `);
+                                                                                                                        <div class="d-flex justify-content-between mb-2">
+                                                                                                                            <h5 class="text-dark">Sheet: ${wsname}</h5>
+                                                                                                                            <a href="${url}" class="btn btn-sm btn-primary" download>Unduh Asli</a>
+                                                                                                                        </div>
+                                                                                                                        <div class="table-responsive bg-white">
+                                                                                                                            ${html}
+                                                                                                                        </div>
+                                                                                                                    `);
 
                             // Basic styling for the generated table
                             $('#excel-table').addClass('table table-bordered table-striped table-sm text-dark');
@@ -523,26 +523,26 @@
                         .catch(err => {
                             console.error(err);
                             $('#excel-preview-container').html(`
-                                                                            <div class="text-center text-danger p-5">
-                                                                                <i class="fas fa-exclamation-triangle fa-3x mb-3"></i>
-                                                                                <h4>Failed to load Excel file</h4>
-                                                                                <p>${err.message}</p>
-                                                                                <a href="${url}" class="btn btn-primary mt-2" download>Download File</a>
-                                                                            </div>
-                                                                        `);
+                                                                                                                        <div class="text-center text-danger p-5">
+                                                                                                                            <i class="fas fa-exclamation-triangle fa-3x mb-3"></i>
+                                                                                                                            <h4>Gagal memuat file Excel</h4>
+                                                                                                                            <p>${err.message}</p>
+                                                                                                                            <a href="${url}" class="btn btn-primary mt-2" download>Unduh File</a>
+                                                                                                                        </div>
+                                                                                                                    `);
                         });
 
                 } else {
                     content = `
-                                                                                                            <div class="text-center text-white p-5">
-                                                                                                                <i class="fas fa-file-download fa-5x mb-4 text-muted"></i>
-                                                                                                                <h4>Preview not available</h4>
-                                                                                                                <p class="mb-4">This file type cannot be previewed directly.</p>
-                                                                                                                <a href="${url}" class="btn btn-primary" download>
-                                                                                                                    <i class="fas fa-download mr-1"></i> Download File
-                                                                                                                </a>
-                                                                                                            </div>
-                                                                                                        `;
+                                                                                                                                                        <div class="text-center text-white p-5">
+                                                                                                                                                            <i class="fas fa-file-download fa-5x mb-4 text-muted"></i>
+                                                                                                                                                            <h4>Pratinjau tidak tersedia</h4>
+                                                                                                                                                            <p class="mb-4">Tipe file ini tidak dapat ditampilkan pratinjau secara langsung.</p>
+                                                                                                                                                            <a href="${url}" class="btn btn-primary" download>
+                                                                                                                                                                <i class="fas fa-download mr-1"></i> Unduh File
+                                                                                                                                                            </a>
+                                                                                                                                                        </div>
+                                                                                                                                                    `;
                 }
 
                 container.html(content);
@@ -555,13 +555,13 @@
                 const row = btn.closest('tr');
 
                 Swal.fire({
-                    title: 'Delete Document?',
-                    text: "This action cannot be undone!",
+                    title: 'Hapus Dokumen?',
+                    text: "Tindakan ini tidak dapat dibatalkan!",
                     type: 'warning',
                     showCancelButton: true,
                     confirmButtonColor: '#d33',
                     cancelButtonColor: '#3085d6',
-                    confirmButtonText: 'Yes, delete it!'
+                    confirmButtonText: 'Ya, hapus!'
                 }).then((result) => {
                     if (result.value) {
                         btn.prop('disabled', true);
@@ -576,7 +576,7 @@
                             success: function (response) {
                                 if (response.success) {
                                     Swal.fire(
-                                        'Deleted!',
+                                        'Terhapus!',
                                         response.success,
                                         'success'
                                     );
@@ -587,12 +587,12 @@
                                         }
                                     });
                                 } else {
-                                    Swal.fire('Error!', response.error || 'Failed to delete', 'error');
+                                    Swal.fire('Error!', response.error || 'Gagal menghapus', 'error');
                                     btn.prop('disabled', false);
                                 }
                             },
                             error: function (xhr) {
-                                let msg = 'Failed to delete document';
+                                let msg = 'Gagal menghapus dokumen';
                                 if (xhr.responseJSON && xhr.responseJSON.error) msg = xhr.responseJSON.error;
                                 Swal.fire('Error!', msg, 'error');
                                 btn.prop('disabled', false);
@@ -623,7 +623,7 @@
                             if (response.is_checked) {
                                 button.removeClass('btn-default').addClass('btn-success');
                                 button.find('i').show();
-                                button.attr('title', 'Uncheck item');
+                                button.attr('title', 'Hapus centang');
                                 row.addClass('table-success');
 
                                 // Update item name cell with check info
@@ -633,18 +633,18 @@
                                 }).text().trim();
 
                                 nameCell.html(`
-                                                                                                    ${itemName}
-                                                                                                    <br>
-                                                                                                    <small class="text-muted">
-                                                                                                        <i class="fas fa-user"></i> ${response.checked_by}
-                                                                                                        <br>
-                                                                                                        <i class="fas fa-clock"></i> ${response.checked_at}
-                                                                                                    </small>
-                                                                                                `);
+                                                                                                                                                ${itemName}
+                                                                                                                                                <br>
+                                                                                                                                                <small class="text-muted">
+                                                                                                                                                    <i class="fas fa-user"></i> ${response.checked_by}
+                                                                                                                                                    <br>
+                                                                                                                                                    <i class="fas fa-clock"></i> ${response.checked_at}
+                                                                                                                                                </small>
+                                                                                                                                            `);
                             } else {
                                 button.removeClass('btn-success').addClass('btn-default');
                                 button.find('i').hide();
-                                button.attr('title', 'Check item');
+                                button.attr('title', 'Centang item');
                                 row.removeClass('table-success');
 
                                 // Remove check info from item name cell
@@ -659,14 +659,14 @@
                             updateCheckCounter();
 
                             // Show success toast
-                            toastr.success(response.is_checked ? 'Item checked successfully' : 'Item unchecked successfully');
+                            toastr.success(response.is_checked ? 'Item berhasil dicentang' : 'Item berhasil dihapus centangnya');
                         }
 
                         // Re-enable button
                         button.prop('disabled', false);
                     },
                     error: function (xhr) {
-                        let errorMessage = 'Failed to toggle item check';
+                        let errorMessage = 'Gagal mengubah status centang item';
                         if (xhr.responseJSON && xhr.responseJSON.error) {
                             errorMessage = xhr.responseJSON.error;
                         }
@@ -685,14 +685,14 @@
                 let row = $('#item-row-' + itemId);
 
                 Swal.fire({
-                    title: 'Reject Item',
+                    title: 'Tolak Item',
                     input: 'textarea',
-                    inputPlaceholder: 'Reason for rejection...',
+                    inputPlaceholder: 'Alasan penolakan...',
                     inputAttributes: {
-                        'aria-label': 'Reason for rejection'
+                        'aria-label': 'Alasan penolakan'
                     },
                     showCancelButton: true,
-                    confirmButtonText: 'Reject',
+                    confirmButtonText: 'Tolak',
                     confirmButtonColor: '#d33',
                     showLoaderOnConfirm: true,
                     preConfirm: (note) => {
@@ -713,7 +713,7 @@
                     allowOutsideClick: () => !Swal.isLoading()
                 }).then((result) => {
                     if (result.value.success === true) {
-                        toastr.success('Item rejected. Reloading...');
+                        toastr.success('Item ditolak. Memuat ulang...');
                         setTimeout(() => {
                             window.location.reload();
                         }, 500);
@@ -734,13 +734,13 @@
                         _token: '{{ csrf_token() }}'
                     },
                     success: function (response) {
-                        toastr.success('Rejection cancelled. Reloading...');
+                        toastr.success('Penolakan dibatalkan. Memuat ulang...');
                         setTimeout(() => {
                             window.location.reload();
                         }, 500);
                     },
                     error: function (xhr) {
-                        toastr.error(xhr.responseJSON.error || 'Failed');
+                        toastr.error(xhr.responseJSON.error || 'Gagal');
                     }
                 });
             });
@@ -749,9 +749,9 @@
                 const totalItems = {{ $procurement->items->count() }};
                 const checkedItems = $('.toggle-check-btn.btn-success').length;
                 $('.badge.badge-info').html(`
-                                                                                                                        <i class="fas fa-clipboard-check"></i>
-                                                                                                                        ${checkedItems} / ${totalItems} Checked
-                                                                                                                    `);
+                                                                                                                                                                    <i class="fas fa-clipboard-check"></i>
+                                                                                                                                                                    ${checkedItems} / ${totalItems} Diperiksa
+                                                                                                                                                                `);
             }
         });
     </script>
