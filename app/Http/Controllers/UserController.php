@@ -125,28 +125,6 @@ class UserController extends Controller
         return redirect()->route('users.index')->with('success', 'User deleted successfully.');
     }
 
-    private function fetchHrsData()
-    {
-        $baseUrl = config('services.hrs.base_url', env('HRS_BASE_URL'));
-        $apiKey = config('services.hrs.api_key', env('HRS_API_KEY'));
-
-        \Log::info('HRS Sync: Attempting to fetch data', [
-            'base_url' => $baseUrl,
-            'api_key_present' => !empty($apiKey)
-        ]);
-
-        return Http::timeout(120)
-            ->retry(3, 100) // Retry 3 times with 100ms delay
-            ->withOptions([
-                'verify' => false, // Temporarily disable SSL verification for testing
-                'connect_timeout' => 30,
-            ])
-            ->withHeaders([
-                'x-api-key' => $apiKey,
-                'Accept' => 'application/json',
-            ])
-            ->get("{$baseUrl}/sync/employees");
-    }
 
     public function previewSync()
     {
@@ -224,17 +202,17 @@ class UserController extends Controller
     public function sync(Request $request)
     {
         try {
-            $response = $this->fetchHrsData();
+            // Get employee data from frontend (already fetched via browser)
+            $employeesDataJson = $request->input('employees_data');
 
-            if ($response->failed()) {
-                return redirect()->back()->with('error', 'Failed to fetch data from HRS: ' . $response->status());
+            if (empty($employeesDataJson)) {
+                return redirect()->back()->with('error', 'No employee data received.');
             }
 
-            $employees = $response->json();
+            $employees = json_decode($employeesDataJson, true);
 
-
-            if (!is_array($employees)) {
-                return redirect()->back()->with('error', 'Invalid data format from HRS.');
+            if (!is_array($employees) || empty($employees)) {
+                return redirect()->back()->with('error', 'Invalid employee data format.');
             }
 
             $counters = [
@@ -242,21 +220,8 @@ class UserController extends Controller
                 'users_updated' => 0,
             ];
 
-            // Get selected NIKs
-            $selectedNiks = $request->input('selected_niks', []);
-
-            if (empty($selectedNiks)) {
-                return redirect()->back()->with('error', 'No users selected for sync.');
-            }
-
-            // 2. Process each employee
+            // Process each employee from frontend data
             foreach ($employees as $emp) {
-                // Skip if not in selected list
-                if (!in_array($emp['nik'], $selectedNiks)) {
-                    continue;
-                }
-
-                // Ensure Company (Site) exists
                 // Ensure Company (Site) exists
                 // Mapping: site_code (HRS) -> code (Company)
                 // Note: Company model uses 'code' and 'name'.

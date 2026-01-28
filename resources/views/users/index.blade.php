@@ -96,7 +96,7 @@
                 <div class="modal-body">
                     <div class="mb-3">
                         <button type="button" class="btn btn-info" id="btnFetchHrs">
-                            <i class="fas fa-cloud-download-alt mr-1"></i> Fetch Data from HRS
+                            <i class="fas fa-sync-alt mr-1"></i> Refresh Data from HRS
                         </button>
                         <span id="fetchLoading" class="ml-2" style="display:none;">
                             <i class="fas fa-spinner fa-spin"></i> Fetching...
@@ -105,7 +105,8 @@
                     </div>
 
                     <div class="mb-2">
-                         <input type="text" id="searchInput" class="form-control" placeholder="Search by NIK or Name..." style="display:none;">
+                        <input type="text" id="searchInput" class="form-control" placeholder="Search by NIK or Name..."
+                            style="display:none;">
                     </div>
 
                     <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
@@ -161,6 +162,14 @@
                 let currentPage = 1;
                 const itemsPerPage = 10;
 
+                // Auto-fetch when modal opens
+                $('#syncModal').on('shown.bs.modal', function () {
+                    // Auto-fetch only if data hasn't been loaded yet
+                    if (employeesData.length === 0) {
+                        $('#btnFetchHrs').trigger('click');
+                    }
+                });
+
                 function renderTable() {
                     const start = (currentPage - 1) * itemsPerPage;
                     const end = start + itemsPerPage;
@@ -198,10 +207,10 @@
                 }
 
                 // Search Event
-                $('#searchInput').on('keyup', function() {
+                $('#searchInput').on('keyup', function () {
                     const term = $(this).val().toLowerCase();
-                    filteredData = employeesData.filter(emp => 
-                        (emp.nik && emp.nik.toLowerCase().includes(term)) || 
+                    filteredData = employeesData.filter(emp =>
+                        (emp.nik && emp.nik.toLowerCase().includes(term)) ||
                         (emp.full_name && emp.full_name.toLowerCase().includes(term))
                     );
                     currentPage = 1;
@@ -227,8 +236,12 @@
                     $btnConfirm.prop('disabled', true);
 
                     $.ajax({
-                        url: "{{ route('users.sync.preview') }}",
+                        url: "{{ env('HRS_BASE_URL') }}/sync/employees",
                         method: "GET",
+                        headers: {
+                            'x-api-key': "{{ env('HRS_API_KEY') }}",
+                            'Accept': 'application/json'
+                        },
                         success: function (response) {
                             $loading.hide();
                             $btn.prop('disabled', false);
@@ -255,7 +268,7 @@
                         error: function (xhr) {
                             $loading.hide();
                             $btn.prop('disabled', false);
-                            $status.text('Error: ' + (xhr.responseJSON?.error || 'Unknown error'));
+                            $status.text('Error: ' + (xhr.responseJSON?.error || xhr.statusText || 'Unknown error'));
                             console.error(xhr);
                         }
                     });
@@ -311,27 +324,26 @@
                 $('#btnConfirmSync').click(function (e) {
                     e.preventDefault();
 
-                    // Collect selected NIKs
-                    const selectedNiks = employeesData.filter(emp => emp.selected).map(emp => emp.nik);
+                    // Collect selected employees with full data
+                    const selectedEmployees = employeesData.filter(emp => emp.selected);
 
-                    if (selectedNiks.length === 0) {
+                    if (selectedEmployees.length === 0) {
                         alert('Please select at least one user to sync.');
                         return;
                     }
 
-                    if (!confirm(`Are you sure you want to sync ${selectedNiks.length} selected users?`)) {
+                    if (!confirm(`Are you sure you want to sync ${selectedEmployees.length} selected users?`)) {
                         return;
                     }
 
-                    // Add selected NIKs to form
+                    // Add selected employees data to form
                     const $form = $('#syncForm');
 
                     // Remove existing hidden inputs if any
-                    $form.find('input[name="selected_niks[]"]').remove();
+                    $form.find('input[name="employees_data"]').remove();
 
-                    selectedNiks.forEach(nik => {
-                        $form.append(`<input type="hidden" name="selected_niks[]" value="${nik}">`);
-                    });
+                    // Send full employee data as JSON
+                    $form.append(`<input type="hidden" name="employees_data" value='${JSON.stringify(selectedEmployees)}'>`);
 
                     // Show loading state
                     var $btn = $(this);

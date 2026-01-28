@@ -65,7 +65,6 @@ Route::middleware(['auth', 'token.valid', 'password.changed'])->group(function (
     Route::resource('divisions', App\Http\Controllers\DivisionController::class);
     Route::get('/ajax/units', [App\Http\Controllers\UnitController::class, 'getUnits'])->name('ajax.units');
     Route::resource('units', App\Http\Controllers\UnitController::class);
-    Route::get('/users/sync/preview', [App\Http\Controllers\UserController::class, 'previewSync'])->name('users.sync.preview');
     Route::post('/users/sync', [App\Http\Controllers\UserController::class, 'sync'])->name('users.sync');
     Route::resource('users', App\Http\Controllers\UserController::class);
     Route::get('/activity-logs', [App\Http\Controllers\ActivityLogController::class, 'index'])->name('activity-logs.index');
