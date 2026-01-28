@@ -135,12 +135,10 @@ class UserController extends Controller
             'api_key_present' => !empty($apiKey)
         ]);
 
-        return Http::timeout(30)
-            ->withHeaders([
-                'x-api-key' => $apiKey,
-                'Accept' => 'application/json',
-            ])
-            ->get("{$baseUrl}/sync/employees");
+        return Http::withHeaders([
+            'x-api-key' => $apiKey,
+            'Accept' => 'application/json',
+        ])->get("{$baseUrl}/sync/employees");
     }
 
     public function previewSync()
