@@ -33,13 +33,19 @@ class ProcurementPolicy
             return true;
         }
 
+        // Manager can view requests from any company as long as they are the unit approver
+        if ($user->role === 'manager') {
+            $unit = $procurement->unit;
+            return $unit && $unit->approval_by === $user->id;
+        }
+
         // Non-holding users must be in the same company
         if ($procurement->company_id !== $user->company_id) {
             return false;
         }
 
-        // Unit and Manager cannot see other units' data within the same company
-        if (in_array($user->role, ['unit', 'manager']) && $procurement->unit_id !== $user->unit_id) {
+        // Unit role can only see their own unit's data
+        if ($user->role === 'unit' && $procurement->unit_id !== $user->unit_id) {
             return false;
         }
 
@@ -60,6 +66,14 @@ class ProcurementPolicy
      */
     public function approve(User $user, ProcurementRequest $procurement)
     {
+        // Manager can approve requests from any company as long as they are the approver
+        if ($user->role === 'manager') {
+            $unit = $procurement->unit;
+            if (!$unit || $unit->approval_by !== $user->id) {
+                return false;
+            }
+        }
+
         // Check if user's role can approve the current status
         $nextStatus = $this->getNextStatus($procurement->status, $user->role, $procurement->request_type, $procurement->total_amount);
         return $nextStatus !== null;
@@ -101,8 +115,9 @@ class ProcurementPolicy
             return false;
         }
 
-        // Manager must be from the same unit
-        if ($procurement->unit_id !== $user->unit_id) {
+        // Manager must be the approver of the unit
+        $unit = $procurement->unit;
+        if (!$unit || $unit->approval_by !== $user->id) {
             return false;
         }
 

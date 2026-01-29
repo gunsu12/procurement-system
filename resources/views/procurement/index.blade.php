@@ -33,7 +33,13 @@
                     @if ($units->count() > 0)
                         <div class="col-md-3 mb-2">
                             <label>Unit</label>
-                            <select name="unit_id" class="form-control" {{ !request('company_id') ? 'disabled' : '' }}>
+                            @php
+                                $holdingRoles = ['finance_manager_holding', 'finance_director_holding', 'general_director_holding', 'super_admin'];
+                                $isHoldingRole = in_array(Auth::user()->role, $holdingRoles);
+                                // Disable unit select only for holding roles when no company is selected
+                                $disableUnit = $isHoldingRole && !request('company_id');
+                            @endphp
+                            <select name="unit_id" class="form-control" {{ $disableUnit ? 'disabled' : '' }}>
                                 <option value="">Semua Unit</option>
                                 @foreach ($units->groupBy('company.name') as $companyName => $companyUnits)
                                     <optgroup label="{{ $companyName ?: 'No Company' }}">
@@ -198,6 +204,26 @@
                         });
                     }
                 });
+            });
+
+            // Remove empty query parameters before form submission
+            $('form[action="{{ route('procurement.index') }}"]').on('submit', function(e) {
+                // Get all form inputs
+                $(this).find('input, select, textarea').each(function() {
+                    var $input = $(this);
+                    var value = $input.val();
+                    
+                    // Remove input if value is empty or null
+                    if (value === '' || value === null) {
+                        $input.prop('disabled', true);
+                    }
+                });
+                
+                // Form will submit without disabled (empty) fields
+                // Re-enable them after a short delay to avoid issues
+                setTimeout(function() {
+                    $('form input, form select, form textarea').prop('disabled', false);
+                }, 100);
             });
         });
     </script>

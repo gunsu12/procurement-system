@@ -28,6 +28,16 @@
                     </div>
 
                     <div class="form-group">
+                        <label for="code">Unit Code</label>
+                        <input type="text" class="form-control @error('code') is-invalid @enderror" id="code"
+                            name="code" value="{{ old('code', $unit->code ?? '') }}" placeholder="Enter unit code"
+                            required>
+                        @error('code')
+                            <span class="error invalid-feedback">{{ $message }}</span>
+                        @enderror
+                    </div>
+
+                    <div class="form-group">
                         <label for="division_id">Division</label>
                         <select name="division_id" id="division_id"
                             class="form-control @error('division_id') is-invalid @enderror" required>
@@ -58,6 +68,30 @@
                             <span class="error invalid-feedback">{{ $message }}</span>
                         @enderror
                     </div>
+
+                    <div class="form-group">
+                        <label for="approval_by">Approver</label>
+                        <input type="hidden" name="approval_by" id="approval_by"
+                            value="{{ old('approval_by', $unit->approval_by ?? '') }}">
+                        <div class="input-group">
+                            <input type="text" class="form-control @error('approval_by') is-invalid @enderror"
+                                id="approval_by_display"
+                                value="{{ old('approval_by') ? \App\Models\User::find(old('approval_by'))->name : ($unit->approver->name ?? '') }}"
+                                placeholder="Select Approver" readonly>
+                            <div class="input-group-append">
+                                <button type="button" class="btn btn-outline-secondary" data-toggle="modal"
+                                    data-target="#approverModal">
+                                    <i class="fas fa-search"></i> Browse
+                                </button>
+                                <button type="button" class="btn btn-outline-danger" id="clearApprover">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                        @error('approval_by')
+                            <span class="error invalid-feedback d-block">{{ $message }}</span>
+                        @enderror
+                    </div>
                 </div>
 
                 <div class="card-footer">
@@ -69,4 +103,6 @@
         </div>
     </div>
 </div>
+
+@include('units.approver_modal')
 @stop

@@ -27,12 +27,28 @@ class ReportController extends Controller
         $query = \App\Models\ProcurementRequest::with('unit', 'user', 'company');
 
         if (!in_array($user->role, $holdingRoles)) {
-            // Non-holding roles restricted to their own company
-            $query->where('company_id', $user->company_id);
+            // Manager can see reports from any company as long as they are the unit approver
+            if ($user->role === 'manager') {
+                $approvedUnitIds = \App\Models\Unit::where('approval_by', $user->id)->pluck('id')->toArray();
+                if ($unitId && in_array($unitId, $approvedUnitIds)) {
+                    // If specific unit requested and manager is approver, use it
+                    $unitId = $unitId;
+                } elseif (!$unitId) {
+                    // If no specific unit, show all units where manager is approver
+                    $query->whereIn('unit_id', $approvedUnitIds);
+                    $unitId = null;
+                } else {
+                    // If unit requested but manager is not approver, show nothing
+                    $query->whereRaw('1 = 0');
+                }
+            } else {
+                // Non-holding roles (except manager) restricted to their own company
+                $query->where('company_id', $user->company_id);
 
-            // Further isolation for unit/manager
-            if (in_array($user->role, ['unit', 'manager'])) {
-                $unitId = $user->unit_id;
+                // Unit role: only their own unit
+                if ($user->role === 'unit') {
+                    $unitId = $user->unit_id;
+                }
             }
         }
 
@@ -69,12 +85,19 @@ class ReportController extends Controller
             ->where('created_at', '<=', $dateLimit);
 
         if (!in_array($user->role, $holdingRoles)) {
-            // Non-holding roles restricted to their own company
-            $query->where('company_id', $user->company_id);
+            // Manager: see units from any company where they are the approver
+            if ($user->role === 'manager') {
+                $query->whereHas('unit', function ($q) use ($user) {
+                    $q->where('approval_by', $user->id);
+                });
+            } else {
+                // Non-holding roles (except manager) restricted to their own company
+                $query->where('company_id', $user->company_id);
 
-            // Isolation logic for Outstanding Report: restricted roles see only their unit
-            if (in_array($user->role, ['unit', 'manager'])) {
-                $query->where('unit_id', $user->unit_id);
+                // Unit role: see only their own unit
+                if ($user->role === 'unit') {
+                    $query->where('unit_id', $user->unit_id);
+                }
             }
         }
 
@@ -99,10 +122,19 @@ class ReportController extends Controller
 
         // Apply access control
         if (!in_array($user->role, $holdingRoles)) {
-            $query->where('company_id', $user->company_id);
+            // Manager: see units from any company where they are the approver
+            if ($user->role === 'manager') {
+                $query->whereHas('unit', function ($q) use ($user) {
+                    $q->where('approval_by', $user->id);
+                });
+            } else {
+                // Non-holding roles (except manager) restricted to their own company
+                $query->where('company_id', $user->company_id);
 
-            if (in_array($user->role, ['unit', 'manager'])) {
-                $query->where('unit_id', $user->unit_id);
+                // Unit role: see only their own unit
+                if ($user->role === 'unit') {
+                    $query->where('unit_id', $user->unit_id);
+                }
             }
         }
 

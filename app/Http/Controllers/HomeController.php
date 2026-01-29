@@ -26,9 +26,17 @@ class HomeController extends Controller
         $user = \Illuminate\Support\Facades\Auth::user();
         $query = \App\Models\ProcurementRequest::query();
 
-        // If unit/manager, only show their unit's stats
-        if (in_array($user->role, ['unit', 'manager'])) {
-            $query->where('unit_id', $user->unit_id);
+        // Manager can see stats from any company as long as they are the unit approver
+        if ($user->role === 'manager') {
+            $query->whereHas('unit', function ($q) use ($user) {
+                $q->where('approval_by', $user->id);
+            });
+        }
+
+        // Unit role only sees their own unit's stats
+        if ($user->role === 'unit') {
+            $query->where('unit_id', $user->unit_id)
+                ->where('company_id', $user->company_id);
         }
 
         $stats = $query->select('status', \Illuminate\Support\Facades\DB::raw('count(*) as total'))

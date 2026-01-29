@@ -17,6 +17,7 @@ Route::get('/', function () {
     return Auth::check() ? redirect()->route('home') : redirect()->route('login');
 });
 
+
 /*
 |--------------------------------------------------------------------------
 | SSO Authentication Routes
@@ -63,6 +64,7 @@ Route::middleware(['auth', 'token.valid', 'password.changed'])->group(function (
     });
 
     Route::resource('divisions', App\Http\Controllers\DivisionController::class);
+    Route::get('/api/divisions', [App\Http\Controllers\DivisionController::class, 'getDivisions'])->name('api.divisions');
     Route::get('/ajax/units', [App\Http\Controllers\UnitController::class, 'getUnits'])->name('ajax.units');
     Route::resource('units', App\Http\Controllers\UnitController::class);
     Route::post('/users/sync', [App\Http\Controllers\UserController::class, 'sync'])->name('users.sync');

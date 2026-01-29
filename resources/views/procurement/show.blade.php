@@ -253,7 +253,7 @@
                                     <th>Satuan</th>
                                     <th>Subtotal</th>
                                     <th>Anggaran</th>
-                                    @if($procurement->status == 'submitted' && Auth::user()->role == 'manager' && $procurement->unit_id == Auth::user()->unit_id)
+                                    @if($procurement->status == 'submitted' && Auth::user()->role == 'manager' && $procurement->unit->approval_by == Auth::user()->id)
                                         <th class="text-center" style="width: 80px;">Aksi</th>
                                     @endif
                                 </tr>
@@ -308,7 +308,7 @@
                                             {{ number_format($item->subtotal, 2, ',', '.') }}
                                         </td>
                                         <td>{{ $item->budget_info ?? '-' }}</td>
-                                        @if($procurement->status == 'submitted' && Auth::user()->role == 'manager' && $procurement->unit_id == Auth::user()->unit_id)
+                                        @if($procurement->status == 'submitted' && Auth::user()->role == 'manager' && $procurement->unit->approval_by == Auth::user()->id)
                                             <td class="text-center">
                                                 @if(!$item->is_rejected)
                                                     <button type="button" class="btn btn-xs btn-danger btn-reject-item"
@@ -403,11 +403,12 @@
                             if (in_array($role, $holdingRoles)) {
                                 $canApprove = true;
                             } else {
-                                // Non-holding roles must be in the same company
-                                if ($user->company_id == $procurement->company_id) {
-                                    if ($role == 'manager') {
-                                        $canApprove = ($user->unit_id == $procurement->unit_id);
-                                    } else {
+                                // Manager can approve from any company if they are the approver
+                                if ($role == 'manager') {
+                                    $canApprove = ($procurement->unit && $procurement->unit->approval_by == $user->id);
+                                } else {
+                                    // Non-holding roles (except manager) must be in the same company
+                                    if ($user->company_id == $procurement->company_id) {
                                         $canApprove = true;
                                     }
                                 }
@@ -495,8 +496,8 @@
                     content = `<embed src="${url}" type="application/pdf" width="100%" height="100%">`;
                 } else if (['xls', 'xlsx'].includes(type.split('/').pop()) || type.includes('excel') || type.includes('spreadsheet')) {
                     content = `<div id="excel-preview-container" style="background: white; padding: 20px; width: 100%; height: 100%; overflow: auto;">
-                                                                                                                          <div class="text-center p-3"><i class="fas fa-spinner fa-spin fa-2x"></i><br>Memuat Spreadsheet...</div>
-                                                                                                                       </div>`;
+                                                                                                                              <div class="text-center p-3"><i class="fas fa-spinner fa-spin fa-2x"></i><br>Memuat Spreadsheet...</div>
+                                                                                                                           </div>`;
 
                     // Fetch and render Excel file
                     fetch(url)
@@ -508,14 +509,14 @@
                             const html = XLSX.utils.sheet_to_html(ws, { id: 'excel-table', editable: false });
 
                             $('#excel-preview-container').html(`
-                                                                                                                        <div class="d-flex justify-content-between mb-2">
-                                                                                                                            <h5 class="text-dark">Sheet: ${wsname}</h5>
-                                                                                                                            <a href="${url}" class="btn btn-sm btn-primary" download>Unduh Asli</a>
-                                                                                                                        </div>
-                                                                                                                        <div class="table-responsive bg-white">
-                                                                                                                            ${html}
-                                                                                                                        </div>
-                                                                                                                    `);
+                                                                                                                            <div class="d-flex justify-content-between mb-2">
+                                                                                                                                <h5 class="text-dark">Sheet: ${wsname}</h5>
+                                                                                                                                <a href="${url}" class="btn btn-sm btn-primary" download>Unduh Asli</a>
+                                                                                                                            </div>
+                                                                                                                            <div class="table-responsive bg-white">
+                                                                                                                                ${html}
+                                                                                                                            </div>
+                                                                                                                        `);
 
                             // Basic styling for the generated table
                             $('#excel-table').addClass('table table-bordered table-striped table-sm text-dark');
@@ -523,26 +524,26 @@
                         .catch(err => {
                             console.error(err);
                             $('#excel-preview-container').html(`
-                                                                                                                        <div class="text-center text-danger p-5">
-                                                                                                                            <i class="fas fa-exclamation-triangle fa-3x mb-3"></i>
-                                                                                                                            <h4>Gagal memuat file Excel</h4>
-                                                                                                                            <p>${err.message}</p>
-                                                                                                                            <a href="${url}" class="btn btn-primary mt-2" download>Unduh File</a>
-                                                                                                                        </div>
-                                                                                                                    `);
+                                                                                                                            <div class="text-center text-danger p-5">
+                                                                                                                                <i class="fas fa-exclamation-triangle fa-3x mb-3"></i>
+                                                                                                                                <h4>Gagal memuat file Excel</h4>
+                                                                                                                                <p>${err.message}</p>
+                                                                                                                                <a href="${url}" class="btn btn-primary mt-2" download>Unduh File</a>
+                                                                                                                            </div>
+                                                                                                                        `);
                         });
 
                 } else {
                     content = `
-                                                                                                                                                        <div class="text-center text-white p-5">
-                                                                                                                                                            <i class="fas fa-file-download fa-5x mb-4 text-muted"></i>
-                                                                                                                                                            <h4>Pratinjau tidak tersedia</h4>
-                                                                                                                                                            <p class="mb-4">Tipe file ini tidak dapat ditampilkan pratinjau secara langsung.</p>
-                                                                                                                                                            <a href="${url}" class="btn btn-primary" download>
-                                                                                                                                                                <i class="fas fa-download mr-1"></i> Unduh File
-                                                                                                                                                            </a>
-                                                                                                                                                        </div>
-                                                                                                                                                    `;
+                                                                                                                                                            <div class="text-center text-white p-5">
+                                                                                                                                                                <i class="fas fa-file-download fa-5x mb-4 text-muted"></i>
+                                                                                                                                                                <h4>Pratinjau tidak tersedia</h4>
+                                                                                                                                                                <p class="mb-4">Tipe file ini tidak dapat ditampilkan pratinjau secara langsung.</p>
+                                                                                                                                                                <a href="${url}" class="btn btn-primary" download>
+                                                                                                                                                                    <i class="fas fa-download mr-1"></i> Unduh File
+                                                                                                                                                                </a>
+                                                                                                                                                            </div>
+                                                                                                                                                        `;
                 }
 
                 container.html(content);
@@ -633,14 +634,14 @@
                                 }).text().trim();
 
                                 nameCell.html(`
-                                                                                                                                                ${itemName}
-                                                                                                                                                <br>
-                                                                                                                                                <small class="text-muted">
-                                                                                                                                                    <i class="fas fa-user"></i> ${response.checked_by}
+                                                                                                                                                    ${itemName}
                                                                                                                                                     <br>
-                                                                                                                                                    <i class="fas fa-clock"></i> ${response.checked_at}
-                                                                                                                                                </small>
-                                                                                                                                            `);
+                                                                                                                                                    <small class="text-muted">
+                                                                                                                                                        <i class="fas fa-user"></i> ${response.checked_by}
+                                                                                                                                                        <br>
+                                                                                                                                                        <i class="fas fa-clock"></i> ${response.checked_at}
+                                                                                                                                                    </small>
+                                                                                                                                                `);
                             } else {
                                 button.removeClass('btn-success').addClass('btn-default');
                                 button.find('i').hide();
@@ -749,9 +750,9 @@
                 const totalItems = {{ $procurement->items->count() }};
                 const checkedItems = $('.toggle-check-btn.btn-success').length;
                 $('.badge.badge-info').html(`
-                                                                                                                                                                    <i class="fas fa-clipboard-check"></i>
-                                                                                                                                                                    ${checkedItems} / ${totalItems} Diperiksa
-                                                                                                                                                                `);
+                                                                                                                                                                        <i class="fas fa-clipboard-check"></i>
+                                                                                                                                                                        ${checkedItems} / ${totalItems} Diperiksa
+                                                                                                                                                                    `);
             }
         });
     </script>

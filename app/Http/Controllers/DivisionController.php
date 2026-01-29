@@ -67,4 +67,17 @@ class DivisionController extends Controller
 
         return redirect()->route('divisions.index')->with('success', 'Division deleted successfully.');
     }
+
+    public function getDivisions(Request $request)
+    {
+        $query = Division::query();
+
+        if ($request->filled('company_id')) {
+            $query->where('company_id', $request->company_id);
+        }
+
+        $divisions = $query->get(['id', 'name', 'code', 'company_id']);
+
+        return response()->json($divisions);
+    }
 }

@@ -11,7 +11,7 @@ class Unit extends Model
 {
     use HasFactory, LogsActivity;
 
-    protected $fillable = ['name', 'code', 'division_id', 'company_id'];
+    protected $fillable = ['name', 'code', 'division_id', 'company_id', 'approval_by'];
 
     public function company()
     {
@@ -21,6 +21,11 @@ class Unit extends Model
     public function division()
     {
         return $this->belongsTo(Division::class);
+    }
+
+    public function approver()
+    {
+        return $this->belongsTo(User::class, 'approval_by');
     }
 
     public function users()

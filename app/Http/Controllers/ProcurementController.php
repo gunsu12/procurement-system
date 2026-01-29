@@ -27,12 +27,17 @@ class ProcurementController extends Controller
         // Isolation logic based on Company
         $holdingRoles = ['finance_manager_holding', 'finance_director_holding', 'general_director_holding', 'super_admin'];
 
-        if (!in_array($user->role, $holdingRoles)) {
-            // Non-holding roles only see their own company
+        // Manager can see requests from any company as long as they are the unit approver
+        if ($user->role === 'manager') {
+            $query->whereHas('unit', function ($q) use ($user) {
+                $q->where('approval_by', $user->id);
+            });
+        } elseif (!in_array($user->role, $holdingRoles)) {
+            // Non-holding roles (except manager) only see their own company
             $query->where('company_id', $user->company_id);
 
-            // Further isolation: Unit and Manager only see their own unit
-            if (in_array($user->role, ['unit', 'manager'])) {
+            // Unit role only sees their own unit
+            if ($user->role === 'unit') {
                 $query->where('unit_id', $user->unit_id);
             }
         }
