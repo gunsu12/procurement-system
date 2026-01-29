@@ -81,4 +81,7 @@ Route::middleware(['auth', 'token.valid', 'password.changed'])->group(function (
     // First Login Password Change Routes
     Route::get('/auth/first-login', [App\Http\Controllers\ProfileController::class, 'showFirstLoginChangePassword'])->name('auth.first-login');
     Route::put('/auth/first-login', [App\Http\Controllers\ProfileController::class, 'updateFirstLoginPassword'])->name('auth.first-login.update');
+
+    // Documentation
+    Route::get('/documentation', [App\Http\Controllers\DocumentationController::class, 'index'])->name('documentation.index');
 });

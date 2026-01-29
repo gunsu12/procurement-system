@@ -408,6 +408,11 @@ return [
             'route' => 'profile.password',
             'icon' => 'fas fa-fw fa-lock',
         ],
+        [
+            'text' => 'Dokumentasi',
+            'route' => 'documentation.index',
+            'icon' => 'fas fa-fw fa-book',
+        ],
     ],
 
     /*
