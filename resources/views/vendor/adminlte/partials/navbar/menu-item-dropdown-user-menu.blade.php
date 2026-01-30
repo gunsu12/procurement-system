@@ -20,40 +20,29 @@
         @if(config('adminlte.usermenu_image'))
             <img src="{{ Auth::user()->adminlte_image() }}" class="user-image img-circle elevation-2"
                 alt="{{ Auth::user()->name }}">
+        @else
+            <i class="far fa-user-circle fa-lg"></i>
         @endif
-        <span @if(config('adminlte.usermenu_image')) class="d-none d-md-inline" @endif>
-            <div class="d-flex flex-column" style="text-align: right;">
-                <span class="font-weight-bold">{{ Auth::user()->name }}</span>
-                <small class="text-muted" style="font-size: 0.75rem; line-height: 1.2;">
-                    @if(Auth::user()->role)
-                        <span>{{ Auth::user()->getRoleLabel() }}</span>
-                    @endif
-                    @if(Auth::user()->unit)
-                        <span> • {{ Auth::user()->unit->name }}</span>
-                    @endif
-                    @if(Auth::user()->company)
-                        <span> • {{ Auth::user()->company->name }}</span>
-                    @endif
-                </small>
-            </div>
-        </span>
     </a>
 
     {{-- User menu dropdown --}}
     <ul class="dropdown-menu dropdown-menu-lg dropdown-menu-right">
 
         {{-- User menu header --}}
-        @if(!View::hasSection('usermenu_header') && config('adminlte.usermenu_header'))
-            <li class="user-header {{ config('adminlte.usermenu_header_class', 'bg-primary') }}
-                            @if(!config('adminlte.usermenu_image')) h-auto @endif">
+        @if(!View::hasSection('usermenu_header'))
+            <li class="user-header {{ config('adminlte.usermenu_header_class', 'bg-primary') }}">
                 @if(config('adminlte.usermenu_image'))
                     <img src="{{ Auth::user()->adminlte_image() }}" class="img-circle elevation-2"
                         alt="{{ Auth::user()->name }}">
                 @endif
-                <p class="@if(!config('adminlte.usermenu_image')) mt-0 @endif">
-                    {{ Auth::user()->name }}
-                    @if(config('adminlte.usermenu_desc'))
-                        <small>{{ Auth::user()->adminlte_desc() }}</small>
+                <p>
+                    <strong>{{ Auth::user()->name }}</strong>
+                    <small class="d-block mt-1">{{ Auth::user()->getRoleLabel() }}</small>
+                    @if(Auth::user()->unit)
+                        <small class="d-block">{{ Auth::user()->unit->name }}</small>
+                    @endif
+                    @if(Auth::user()->company)
+                        <small class="d-block">{{ Auth::user()->company->name }}</small>
                     @endif
                 </p>
             </li>

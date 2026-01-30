@@ -1,19 +1,30 @@
-/* User Menu Sneak Peek Styling */
+/* User Menu Icon Styling */
 .user-menu .nav-link {
     padding-top: 0.5rem;
     padding-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
 }
 
-.user-menu .nav-link .d-flex {
-    text-align: right;
-    align-items: flex-end;
+.user-menu .nav-link i.fa-user-circle {
+    color: #6c757d;
+    transition: color 0.3s ease;
+}
+
+.user-menu .nav-link:hover i.fa-user-circle {
+    color: #007bff;
 }
 
 .user-menu .nav-link:hover {
     background-color: rgba(0, 0, 0, 0.05);
 }
 
+/* User Menu Dropdown Header Styling */
+.user-menu .user-header small {
+    opacity: 0.9;
+    font-size: 0.875rem;
+}
+
 .user-menu .dropdown-toggle::after {
-    margin-left: 0.5rem;
-    align-self: center;
+    display: none;
 }
