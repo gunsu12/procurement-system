@@ -1,0 +1,19 @@
+/* User Menu Sneak Peek Styling */
+.user-menu .nav-link {
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+}
+
+.user-menu .nav-link .d-flex {
+    text-align: right;
+    align-items: flex-end;
+}
+
+.user-menu .nav-link:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+.user-menu .dropdown-toggle::after {
+    margin-left: 0.5rem;
+    align-self: center;
+}

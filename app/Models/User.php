@@ -144,6 +144,27 @@ class User extends Authenticatable
         return route('profile.show');
     }
 
+    /**
+     * Get formatted role label
+     * Converts role from database format to user-friendly display format
+     */
+    public function getRoleLabel()
+    {
+        $roleLabels = [
+            'super_admin' => 'Administrator',
+            'unit' => 'Unit',
+            'manager' => 'Manager',
+            'budgeting' => 'Budgeting',
+            'director_company' => 'Direktur',
+            'finance_manager_holding' => 'Finance Manager Holding',
+            'finance_director_holding' => 'Direktur Keuangan Holding',
+            'general_director_holding' => 'Direktur Umum Holding',
+            'purchasing' => 'Purchasing',
+        ];
+
+        return $roleLabels[$this->role] ?? ucfirst(str_replace('_', ' ', $this->role));
+    }
+
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
