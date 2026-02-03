@@ -135,27 +135,25 @@
             <div class="row">
                 <div class="col-md-6">
                     <h5><i class="fas fa-fast-forward text-primary"></i> Short Chain</h5>
-                    <p class="text-sm"><strong>Kondisi:</strong> Tipe Nonaset & Total < Rp 1.000.000</p>
-                            <div class="card bg-light">
-                                <div class="card-body">
-                                    <ol class="mb-0">
-                                        <li><strong>Submitted</strong> → <span
-                                                class="badge badge-success">Manager</span></li>
-                                        <li><strong>Approved by Manager</strong> → <span
-                                                class="badge badge-warning">Budgeting</span></li>
-                                        <li><strong>Approved by Budgeting</strong> → <span
-                                                class="badge badge-dark">Purchasing</span></li>
-                                        <li><strong>Processing</strong> → <span
-                                                class="badge badge-dark">Purchasing</span></li>
-                                        <li><strong>Completed</strong> ✅</li>
-                                    </ol>
-                                </div>
-                            </div>
+                    <p class="text-sm"><strong>Kondisi:</strong> Tipe Nonaset & Total > Rp 1.000.000</p>
+                    <div class="card bg-light">
+                        <div class="card-body">
+                            <ol class="mb-0">
+                                <li><strong>Submitted</strong> → <span class="badge badge-success">Manager</span></li>
+                                <li><strong>Approved by Manager</strong> → <span
+                                        class="badge badge-warning">Budgeting</span></li>
+                                <li><strong>Approved by Budgeting</strong> → <span
+                                        class="badge badge-dark">Purchasing</span></li>
+                                <li><strong>Processing</strong> → <span class="badge badge-dark">Purchasing</span></li>
+                                <li><strong>Completed</strong> ✅</li>
+                            </ol>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="col-md-6">
                     <h5><i class="fas fa-route text-danger"></i> Full Chain</h5>
-                    <p class="text-sm"><strong>Kondisi:</strong> Tipe Aset ATAU Total >= Rp 1.000.000</p>
+                    <p class="text-sm"><strong>Kondisi:</strong> Tipe Aset</p>
                     <div class="card bg-light">
                         <div class="card-body">
                             <ol class="mb-0 text-sm">
