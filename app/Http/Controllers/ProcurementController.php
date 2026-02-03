@@ -171,6 +171,15 @@ class ProcurementController extends Controller
 
         $validated = $request->validate($rules);
 
+        // Custom Validation: Non-Asset < 1M
+        $totalAmount = collect($request->items)->sum(function ($item) {
+            return $item['quantity'] * $item['estimated_price'];
+        });
+
+        if ($request->request_type === 'nonaset' && $totalAmount < 1000000) {
+            return back()->withInput()->with('error', 'Permintaan Non-Aset dibawah Rp 1.000.000 tidak perlu diajukan via sistem ini (langsung ke inventory).');
+        }
+
         DB::transaction(function () use ($request, $user, $isHighLevel) {
             $unitId = $isHighLevel ? $request->unit_id : $user->unit_id;
 
@@ -262,6 +271,15 @@ class ProcurementController extends Controller
             'cito_reason' => 'required_if:is_cito,1|nullable|string|max:1000',
             'document.*' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png|max:10240',
         ]);
+
+        // Custom Validation: Non-Asset < 1M
+        $totalAmount = collect($request->items)->sum(function ($item) {
+            return $item['quantity'] * $item['estimated_price'];
+        });
+
+        if ($request->request_type === 'nonaset' && $totalAmount < 1000000) {
+            return back()->withInput()->with('error', 'Permintaan Non-Aset dibawah Rp 1.000.000 tidak perlu diajukan via sistem ini (langsung ke inventory).');
+        }
 
         DB::transaction(function () use ($request, $procurement) {
             $procurement->update([
@@ -386,14 +404,13 @@ class ProcurementController extends Controller
             'processing' => ['purchasing' => 'completed'],
         ];
 
-        // Logic:
-        // 1. Asset -> Full Chain
-        // 2. Non-Asset >= 1M -> Full Chain
-        // 3. Non-Asset < 1M -> Short Chain
+        // Logic Re-defined (03 Feb 2026):
+        // 1. Non-Asset > 1.000.000 -> Short Chain
+        // 2. All others (Asset, or Non-Asset <= 1M) -> Full Chain
 
         $map = $fullChain; // Default to full
 
-        if ($requestType === 'nonaset' && $totalAmount < 1000000) {
+        if ($requestType === 'nonaset' && $totalAmount > 1000000) {
             $map = $shortChain;
         }
 
