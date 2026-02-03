@@ -57,7 +57,7 @@
                     <div class="col-md-2 mb-2">
                         <label>Status</label>
                         <select name="status" class="form-control">
-                            <option value="">Semua Status</option>
+                            <option value="all" {{ request('status') == 'all' ? 'selected' : '' }}>Semua Status</option>
                             @foreach ($statuses as $status)
                                 <option value="{{ $status }}" {{ request('status') == $status ? 'selected' : '' }}>
                                     {{ ucfirst(str_replace('_', ' ', $status)) }}
