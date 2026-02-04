@@ -113,7 +113,7 @@
                             <div class="col-md-2">Subtotal</div>
                             <div class="col-md-1">Anggaran</div>
                             <div class="col-md-1">
-                                <button type="button" class="btn btn-sm btn-success btn-block" id="addItem"
+                                <button type="button" class="btn btn-sm btn-success" id="addItem"
                                     title="Tambah Barang"><i class="fas fa-plus"></i></button>
                             </div>
                         </div>
@@ -225,7 +225,7 @@
     }
 
     // Add item row
-    $('.btn-add-item').click(function () {
+    $('#addItem, .btn-add-item').click(function () {
         let html = `
         <div class="item-row mb-3 mb-md-0 border-bottom border-md-0 pb-3 pb-md-0">
             <div class="row align-items-center">
