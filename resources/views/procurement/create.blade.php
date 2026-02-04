@@ -100,44 +100,93 @@
                         file.
                         Anda dapat memilih beberapa file.</small>
                 </div>
-
                 <h4>Daftar Barang</h4>
-                <table class="table table-bordered" id="itemsTable">
-                    <thead>
-                        <tr>
-                            <th>Nama Barang</th>
-                            <th>Spesifikasi</th>
-                            <th width="100px">Jumlah</th>
-                            <th>Est. Harga</th>
-                            <th width="100px">Satuan</th>
-                            <th>Subtotal</th>
-                            <th>Info Anggaran</th>
-                            <th><button type="button" class="btn btn-sm btn-success" id="addItem">+</button></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><input type="text" name="items[0][name]" class="form-control" required></td>
-                            <td><input type="text" name="items[0][specification]" class="form-control"></td>
-                            <td><input type="number" name="items[0][quantity]" class="form-control item-qty" value="1"
-                                    min="1" required>
-                            </td>
-                            <td><input type="number" name="items[0][estimated_price]" class="form-control item-price"
-                                    step="0.01" value="0" required></td>
-                            <td><input type="text" name="items[0][unit]" class="form-control" placeholder="Pcs/Set"
-                                    required></td>
-                            <td class="item-subtotal text-right">Rp 0</td>
-                            <td><input type="text" name="items[0][budget_info]" class="form-control"></td>
-                            <td></td>
-                        </tr>
-                    </tbody>
-                    <tfoot>
-                        <tr class="table-info">
-                            <td colspan="5" class="text-right"><strong>Total Pengajuan:</strong></td>
-                            <td colspan="3"><strong id="totalAmount">Rp 0</strong></td>
-                        </tr>
-                    </tfoot>
-                </table>
+                <div class="card bg-light shadow-sm mb-3">
+                    <div class="card-body p-2">
+                        <!-- Header (Desktop Only) -->
+                        <div class="d-none d-md-flex row border-bottom pb-2 mb-2 font-weight-bold text-center">
+                            <div class="col-md-2">Nama Barang</div>
+                            <div class="col-md-2">Spesifikasi</div>
+                            <div class="col-md-1">Jumlah</div>
+                            <div class="col-md-1">Satuan</div>
+                            <div class="col-md-2">Est. Harga</div>
+                            <div class="col-md-2">Subtotal</div>
+                            <div class="col-md-1">Anggaran</div>
+                            <div class="col-md-1">
+                                <button type="button" class="btn btn-sm btn-success btn-block" id="addItem"
+                                    title="Tambah Barang"><i class="fas fa-plus"></i></button>
+                            </div>
+                        </div>
+
+                        <!-- Items List Container -->
+                        <div id="itemsList">
+                            <!-- Item Template (Initial Row) -->
+                            <div class="item-row mb-3 mb-md-0 border-bottom border-md-0 pb-3 pb-md-0">
+                                <div class="row align-items-center">
+                                    <div class="col-12 col-md-2 mb-2 mb-md-0">
+                                        <label class="d-md-none small text-muted">Nama Barang</label>
+                                        <input type="text" name="items[0][name]" class="form-control"
+                                            placeholder="Nama Barang" required>
+                                    </div>
+                                    <div class="col-12 col-md-2 mb-2 mb-md-0">
+                                        <label class="d-md-none small text-muted">Spesifikasi</label>
+                                        <input type="text" name="items[0][specification]" class="form-control"
+                                            placeholder="Spesifikasi">
+                                    </div>
+                                    <div class="col-6 col-md-1 mb-2 mb-md-0">
+                                        <label class="d-md-none small text-muted">Jumlah</label>
+                                        <input type="number" name="items[0][quantity]" class="form-control item-qty"
+                                            value="1" min="1" required>
+                                    </div>
+                                    <div class="col-6 col-md-1 mb-2 mb-md-0">
+                                        <label class="d-md-none small text-muted">Satuan</label>
+                                        <input type="text" name="items[0][unit]" class="form-control"
+                                            placeholder="Satuan" required>
+                                    </div>
+                                    <div class="col-12 col-md-2 mb-2 mb-md-0">
+                                        <label class="d-md-none small text-muted">Est. Harga</label>
+                                        <input type="number" name="items[0][estimated_price]"
+                                            class="form-control item-price" step="0.01" value="0" required>
+                                    </div>
+                                    <div class="col-12 col-md-2 mb-2 mb-md-0 text-right">
+                                        <div class="d-flex justify-content-between d-md-block">
+                                            <span class="d-md-none font-weight-bold">Subtotal:</span>
+                                            <span class="item-subtotal font-weight-bold">Rp 0,00</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-12 col-md-1 mb-2 mb-md-0">
+                                        <label class="d-md-none small text-muted">Info Anggaran</label>
+                                        <input type="text" name="items[0][budget_info]" class="form-control"
+                                            placeholder="Info">
+                                    </div>
+                                    <div class="col-12 col-md-1 text-center">
+                                        <button type="button"
+                                            class="btn btn-danger btn-sm btn-block remove-row d-md-none"><i
+                                                class="fas fa-trash"></i> Hapus</button>
+                                        <button type="button"
+                                            class="btn btn-danger btn-sm remove-row d-none d-md-inline-block"><i
+                                                class="fas fa-times"></i></button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Mobile Add Button -->
+                        <div class="d-md-none mt-3">
+                            <button type="button" class="btn btn-success btn-block btn-add-item">
+                                <i class="fas fa-plus"></i> Tambah Barang
+                            </button>
+                        </div>
+
+                        <!-- Total Footer -->
+                        <div class="row mt-3 border-top pt-3">
+                            <div class="col-12 text-right">
+                                <h5 class="font-weight-bold mb-0">Total Pengajuan: <span id="totalAmount"
+                                        class="text-primary">Rp 0,00</span></h5>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
                 <div class="d-flex justify-content-between">
                     <a href="{{ route('procurement.index') }}" class="btn btn-secondary">Kembali</a>
@@ -156,7 +205,7 @@
     // Calculate total
     function calculateTotal() {
         let grandTotal = 0;
-        $('#itemsTable tbody tr').each(function () {
+        $('#itemsList .item-row').each(function () {
             let qty = parseFloat($(this).find('.item-qty').val()) || 0;
             let price = parseFloat($(this).find('.item-price').val()) || 0;
             let subtotal = qty * price;
@@ -176,25 +225,54 @@
     }
 
     // Add item row
-    $('#addItem').click(function () {
-        let html = `<tr>
-            <td><input type="text" name="items[${itemIndex}][name]" class="form-control" required></td>
-            <td><input type="text" name="items[${itemIndex}][specification]" class="form-control"></td>
-            <td><input type="number" name="items[${itemIndex}][quantity]" class="form-control item-qty" value="1" min="1" required></td>
-            <td><input type="number" name="items[${itemIndex}][estimated_price]" class="form-control item-price" step="0.01" value="0" required></td>
-            <td><input type="text" name="items[${itemIndex}][unit]" class="form-control" placeholder="Pcs/Set" required></td>
-            <td class="item-subtotal text-right">Rp 0</td>
-            <td><input type="text" name="items[${itemIndex}][budget_info]" class="form-control"></td>
-            <td><button type="button" class="btn btn-danger btn-sm remove-row">x</button></td>
-        </tr>`;
-        $('#itemsTable tbody').append(html);
+    $('.btn-add-item').click(function () {
+        let html = `
+        <div class="item-row mb-3 mb-md-0 border-bottom border-md-0 pb-3 pb-md-0">
+            <div class="row align-items-center">
+                <div class="col-12 col-md-2 mb-2 mb-md-0">
+                    <label class="d-md-none small text-muted">Nama Barang</label>
+                    <input type="text" name="items[${itemIndex}][name]" class="form-control" placeholder="Nama Barang" required>
+                </div>
+                <div class="col-12 col-md-2 mb-2 mb-md-0">
+                    <label class="d-md-none small text-muted">Spesifikasi</label>
+                    <input type="text" name="items[${itemIndex}][specification]" class="form-control" placeholder="Spesifikasi">
+                </div>
+                <div class="col-6 col-md-1 mb-2 mb-md-0">
+                    <label class="d-md-none small text-muted">Jumlah</label>
+                    <input type="number" name="items[${itemIndex}][quantity]" class="form-control item-qty" value="1" min="1" required>
+                </div>
+                <div class="col-6 col-md-1 mb-2 mb-md-0">
+                    <label class="d-md-none small text-muted">Satuan</label>
+                    <input type="text" name="items[${itemIndex}][unit]" class="form-control" placeholder="Satuan" required>
+                </div>
+                <div class="col-12 col-md-2 mb-2 mb-md-0">
+                    <label class="d-md-none small text-muted">Est. Harga</label>
+                    <input type="number" name="items[${itemIndex}][estimated_price]" class="form-control item-price" step="0.01" value="0" required>
+                </div>
+                <div class="col-12 col-md-2 mb-2 mb-md-0 text-right">
+                    <div class="d-flex justify-content-between d-md-block">
+                        <span class="d-md-none font-weight-bold">Subtotal:</span>
+                        <span class="item-subtotal font-weight-bold">Rp 0,00</span>
+                    </div>
+                </div>
+                <div class="col-12 col-md-1 mb-2 mb-md-0">
+                    <label class="d-md-none small text-muted">Info Anggaran</label>
+                    <input type="text" name="items[${itemIndex}][budget_info]" class="form-control" placeholder="Info">
+                </div>
+                <div class="col-12 col-md-1 text-center">
+                    <button type="button" class="btn btn-danger btn-sm btn-block remove-row d-md-none"><i class="fas fa-trash"></i> Hapus</button>
+                    <button type="button" class="btn btn-danger btn-sm remove-row d-none d-md-inline-block"><i class="fas fa-times"></i></button>
+                </div>
+            </div>
+        </div>`;
+        $('#itemsList').append(html);
         itemIndex++;
         calculateTotal();
     });
 
     // Remove row
     $(document).on('click', '.remove-row', function () {
-        $(this).closest('tr').remove();
+        $(this).closest('.item-row').remove();
         calculateTotal();
     });
 

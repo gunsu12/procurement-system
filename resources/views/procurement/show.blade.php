@@ -58,60 +58,47 @@
                     </div>
                 </div>
                 <div class="card-body">
-                    <div class="row mb-3">
-                        <div class="col-md-4">
-                            <p class="mb-2"><strong>Perusahaan:</strong> {{ $procurement->company->name ?? '-' }}</p>
-                        </div>
-                        <div class="col-md-4">
-                            <p class="mb-2"><strong>Unit:</strong> {{ $procurement->unit->name }}</p>
-                        </div>
-                        <div class="col-md-4">
-                            <p class="mb-2"><strong>Pemohon:</strong> {{ $procurement->user->name }}</p>
-                        </div>
-                    </div>
+                    <dl class="row">
+                        <dt class="col-sm-4 col-md-3">Perusahaan</dt>
+                        <dd class="col-sm-8 col-md-9">{{ $procurement->company->name ?? '-' }}</dd>
 
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <p class="mb-2"><strong>Tanggal:</strong>
-                                {{ $procurement->created_at->format('Y-m-d H:i:s') }}</p>
-                        </div>
-                        <div class="col-md-6">
-                            <p class="mb-2"><strong>Total Pengajuan:</strong>
-                                <span class="badge badge-success" style="font-size: 1.1em;">
-                                    Rp {{ number_format($procurement->total_amount, 2, ',', '.') }}
-                                </span>
-                            </p>
-                        </div>
-                    </div>
+                        <dt class="col-sm-4 col-md-3">Unit</dt>
+                        <dd class="col-sm-8 col-md-9">{{ $procurement->unit->name }}</dd>
 
-                    @if ($procurement->notes)
-                        <div class="row mb-3">
-                            <div class="col-md-12">
-                                <p class="mb-2"><strong>Catatan:</strong></p>
-                                <p class="text-muted">{{ $procurement->notes }}</p>
-                            </div>
-                        </div>
-                    @endif
+                        <dt class="col-sm-4 col-md-3">Pemohon</dt>
+                        <dd class="col-sm-8 col-md-9">{{ $procurement->user->name }}</dd>
 
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <p class="mb-2"><strong>Tipe Permohonan:</strong>
-                                <span
-                                    class="badge badge-{{ $procurement->request_type == 'aset' ? 'success' : 'info' }}">
-                                    {{ ucfirst($procurement->request_type) }}
-                                </span>
-                            </p>
-                        </div>
-                        <div class="col-md-6">
-                            <p class="mb-2"><strong>Kategori:</strong>
-                                @if ($procurement->is_medical)
-                                    <span class="badge badge-warning">Medis</span>
-                                @else
-                                    <span class="badge badge-secondary">Non Medis</span>
-                                @endif
-                            </p>
-                        </div>
-                    </div>
+                        <dt class="col-sm-4 col-md-3">Tanggal</dt>
+                        <dd class="col-sm-8 col-md-9">{{ $procurement->created_at->format('d F Y H:i') }}</dd>
+
+                        <dt class="col-sm-4 col-md-3">Tipe Permohonan</dt>
+                        <dd class="col-sm-8 col-md-9">
+                            <span class="badge badge-{{ $procurement->request_type == 'aset' ? 'success' : 'info' }}">
+                                {{ ucfirst($procurement->request_type) }}
+                            </span>
+                        </dd>
+
+                        <dt class="col-sm-4 col-md-3">Kategori</dt>
+                        <dd class="col-sm-8 col-md-9">
+                            @if ($procurement->is_medical)
+                                <span class="badge badge-warning">Medis</span>
+                            @else
+                                <span class="badge badge-secondary">Non Medis</span>
+                            @endif
+                        </dd>
+
+                        <dt class="col-sm-4 col-md-3">Total Pengajuan</dt>
+                        <dd class="col-sm-8 col-md-9">
+                            <span class="text-success font-weight-bold" style="font-size: 1.1em;">
+                                Rp {{ number_format($procurement->total_amount, 2, ',', '.') }}
+                            </span>
+                        </dd>
+
+                        @if ($procurement->notes)
+                            <dt class="col-sm-4 col-md-3">Catatan</dt>
+                            <dd class="col-sm-8 col-md-9">{{ $procurement->notes }}</dd>
+                        @endif
+                    </dl>
 
                     @if ($procurement->is_cito)
                         <div class="alert alert-warning border-left-warning mb-3" style="border-left: 4px solid #ffc107;">
@@ -237,7 +224,8 @@
                             </span>
                         @endif
                     </h5>
-                    <div class="table-responsive">
+                    <!-- Desktop View (Table) -->
+                    <div class="table-responsive d-none d-md-block">
                         <table class="table table-bordered table-hover">
                             <thead class="thead-light">
                                 <tr>
@@ -340,31 +328,173 @@
                             </tfoot>
                         </table>
                     </div>
+
+                    <!-- Mobile View (Cards) -->
+                    <div class="d-md-none">
+                        @foreach ($procurement->items as $item)
+                            <div class="card mb-3 {{ $item->is_checked ? 'border-success' : ($item->is_rejected ? 'border-danger' : '') }}"
+                                id="mobile-item-row-{{ $item->id }}">
+                                <div class="card-body p-3">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <h5 class="card-title font-weight-bold mb-0">{{ $item->name }}</h5>
+                                        @if($procurement->status == 'processing' && Auth::user()->role == 'purchasing')
+                                            <button type="button"
+                                                class="btn {{ $item->is_checked ? 'btn-success' : 'btn-default' }} toggle-check-btn btn-sm ml-2"
+                                                data-item-id="{{ $item->id }}"
+                                                style="width: 30px; height: 30px; border-radius: 4px; border: 2px solid #28a745;"
+                                                title="{{ $item->is_checked ? 'Hapus centang' : 'Centang item' }}">
+                                                <i class="fas fa-check"
+                                                    style="{{ $item->is_checked ? '' : 'display: none;' }}"></i>
+                                            </button>
+                                        @endif
+                                    </div>
+
+                                    @if($item->specification)
+                                        <p class="text-muted small mb-2"><i class="fas fa-info-circle mr-1"></i>
+                                            {{ $item->specification }}</p>
+                                    @endif
+
+                                    <div class="row small mb-2">
+                                        <div class="col-6">
+                                            <span class="text-muted">Jumlah:</span><br>
+                                            <strong>{{ $item->quantity }} {{ $item->unit }}</strong>
+                                        </div>
+                                        <div class="col-6 text-right">
+                                            <span class="text-muted">Est. Harga:</span><br>
+                                            <strong>Rp {{ number_format($item->estimated_price, 2, ',', '.') }}</strong>
+                                        </div>
+                                    </div>
+
+                                    <div class="d-flex justify-content-between align-items-center border-top pt-2">
+                                        <span>Subtotal:</span>
+                                        <strong class="text-primary">Rp
+                                            {{ number_format($item->subtotal, 2, ',', '.') }}</strong>
+                                    </div>
+
+                                    @if($item->budget_info)
+                                        <div class="mt-2 text-muted small">
+                                            <i class="fas fa-coins mr-1"></i> Anggaran: {{ $item->budget_info }}
+                                        </div>
+                                    @endif
+
+                                    @if($item->is_checked)
+                                        <div class="alert alert-success p-2 mt-2 mb-0 small">
+                                            <i class="fas fa-user mr-1"></i> {{ $item->checkedBy->name ?? '-' }}
+                                            <span class="float-right"><i class="fas fa-clock mr-1"></i>
+                                                {{ $item->checked_at ? $item->checked_at->format('d M H:i') : '-' }}</span>
+                                        </div>
+                                    @endif
+
+                                    @if($item->is_rejected)
+                                        <div class="alert alert-danger p-2 mt-2 mb-0 small">
+                                            <strong><i class="fas fa-times-circle mr-1"></i> Ditolak</strong>
+                                            @if($item->rejection_note)
+                                                <div class="mt-1 border-top border-danger pt-1">
+                                                    {{ $item->rejection_note }}
+                                                </div>
+                                            @endif
+                                        </div>
+                                    @endif
+
+                                    @if($procurement->status == 'submitted' && Auth::user()->role == 'manager' && $procurement->unit->approval_by == Auth::user()->id)
+                                        <div class="mt-3 text-right border-top pt-2">
+                                            @if(!$item->is_rejected)
+                                                <button type="button"
+                                                    class="btn btn-sm btn-outline-danger btn-reject-item btn-block"
+                                                    data-item-id="{{ $item->id }}">
+                                                    <i class="fas fa-times mr-1"></i> Tolak Item
+                                                </button>
+                                            @else
+                                                <button type="button"
+                                                    class="btn btn-sm btn-outline-secondary btn-cancel-reject-item btn-block"
+                                                    data-item-id="{{ $item->id }}">
+                                                    <i class="fas fa-undo mr-1"></i> Batal Tolak
+                                                </button>
+                                            @endif
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                        @endforeach
+
+                        <div class="card bg-light border-info">
+                            <div class="card-body p-3 d-flex justify-content-between align-items-center">
+                                <h6 class="mb-0 font-weight-bold text-info">Total Pengajuan</h6>
+                                <h5 class="mb-0 font-weight-bold">Rp
+                                    {{ number_format($procurement->total_amount, 2, ',', '.') }}
+                                </h5>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
             <div class="card">
-                <div class="card-header">
+                <div class="card-header d-flex justify-content-between align-items-center" data-toggle="collapse"
+                    data-target="#historyCollapse" aria-expanded="false" aria-controls="historyCollapse"
+                    style="cursor: pointer;">
                     <h3 class="card-title">Riwayat Persetujuan</h3>
+                    <i class="fas fa-chevron-right d-md-none pull-right" id="historyIcon"></i>
                 </div>
-                <div class="card-body">
-                    <ul>
+                <div class="collapse" id="historyCollapse">
+                    <div class="timeline timeline-inverse">
                         @foreach ($procurement->logs as $log)
-                            <li>
-                                <strong>{{ $log->user->name }}</strong> ({{ $log->user->role }}) -
-                                {{ $log->action }}
-                                <br>
-                                <small>{{ $log->created_at }}</small>
-                                @if ($log->note)
-                                    <p class="text-muted">{{ $log->note }}</p>
-                                @endif
-                            </li>
+                            @php
+                                $icon = 'fa-info';
+                                $bg = 'bg-secondary';
+                                if (stripos($log->action, 'submit') !== false) {
+                                    $icon = 'fa-paper-plane';
+                                    $bg = 'bg-primary';
+                                } elseif (stripos($log->action, 'approve') !== false) {
+                                    $icon = 'fa-check';
+                                    $bg = 'bg-success';
+                                } elseif (stripos($log->action, 'reject') !== false) {
+                                    $icon = 'fa-times';
+                                    $bg = 'bg-danger';
+                                } elseif (stripos($log->action, 'process') !== false) {
+                                    $icon = 'fa-cog';
+                                    $bg = 'bg-warning';
+                                }
+                            @endphp
+                            <div>
+                                <i class="fas {{ $icon }} {{ $bg }}"></i>
+                                <div class="timeline-item">
+                                    <span class="time"><i class="far fa-clock"></i>
+                                        {{ $log->created_at->format('d M H:i') }}</span>
+                                    <h3 class="timeline-header border-0">
+                                        <a href="#">{{ $log->user->name }}</a>
+                                        <span class="text-muted"
+                                            style="font-size: 0.9em;">({{ str_replace('_', ' ', $log->user->role) }})</span>
+                                        <div class="mt-1">
+                                            <span
+                                                class="badge badge-{{ str_replace('bg-', '', $bg) }}">{{ ucfirst($log->action) }}</span>
+                                        </div>
+                                    </h3>
+                                    @if ($log->note)
+                                        <div class="timeline-body p-2 bg-light border rounded mt-2" style="font-size: 0.9em;">
+                                            {{ $log->note }}
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
                         @endforeach
-                    </ul>
+                        <div>
+                            <i class="far fa-clock bg-gray"></i>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
 
+        <style>
+            @media (min-width: 768px) {
+                #historyCollapse.collapse {
+                    display: block !important;
+                    height: auto !important;
+                    visibility: visible !important;
+                }
+            }
+        </style>
         <div class="col-md-4">
             <div class="card">
                 <div class="card-header">
@@ -477,6 +607,14 @@
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
     <script>
         $(document).ready(function () {
+            // History Collapse Icon Toggle
+            $('#historyCollapse').on('show.bs.collapse', function () {
+                $('#historyIcon').removeClass('fa-chevron-right').addClass('fa-chevron-down');
+            });
+            $('#historyCollapse').on('hide.bs.collapse', function () {
+                $('#historyIcon').removeClass('fa-chevron-down').addClass('fa-chevron-right');
+            });
+
             // Document Preview Handler
             $('.btn-view-document').on('click', function () {
                 const btn = $(this);
@@ -496,8 +634,8 @@
                     content = `<embed src="${url}" type="application/pdf" width="100%" height="100%">`;
                 } else if (['xls', 'xlsx'].includes(type.split('/').pop()) || type.includes('excel') || type.includes('spreadsheet')) {
                     content = `<div id="excel-preview-container" style="background: white; padding: 20px; width: 100%; height: 100%; overflow: auto;">
-                                                                                                                              <div class="text-center p-3"><i class="fas fa-spinner fa-spin fa-2x"></i><br>Memuat Spreadsheet...</div>
-                                                                                                                           </div>`;
+                                                                                                                                                      <div class="text-center p-3"><i class="fas fa-spinner fa-spin fa-2x"></i><br>Memuat Spreadsheet...</div>
+                                                                                                                                                   </div>`;
 
                     // Fetch and render Excel file
                     fetch(url)
@@ -509,14 +647,14 @@
                             const html = XLSX.utils.sheet_to_html(ws, { id: 'excel-table', editable: false });
 
                             $('#excel-preview-container').html(`
-                                                                                                                            <div class="d-flex justify-content-between mb-2">
-                                                                                                                                <h5 class="text-dark">Sheet: ${wsname}</h5>
-                                                                                                                                <a href="${url}" class="btn btn-sm btn-primary" download>Unduh Asli</a>
-                                                                                                                            </div>
-                                                                                                                            <div class="table-responsive bg-white">
-                                                                                                                                ${html}
-                                                                                                                            </div>
-                                                                                                                        `);
+                                                                                                                                                    <div class="d-flex justify-content-between mb-2">
+                                                                                                                                                        <h5 class="text-dark">Sheet: ${wsname}</h5>
+                                                                                                                                                        <a href="${url}" class="btn btn-sm btn-primary" download>Unduh Asli</a>
+                                                                                                                                                    </div>
+                                                                                                                                                    <div class="table-responsive bg-white">
+                                                                                                                                                        ${html}
+                                                                                                                                                    </div>
+                                                                                                                                                `);
 
                             // Basic styling for the generated table
                             $('#excel-table').addClass('table table-bordered table-striped table-sm text-dark');
@@ -524,26 +662,26 @@
                         .catch(err => {
                             console.error(err);
                             $('#excel-preview-container').html(`
-                                                                                                                            <div class="text-center text-danger p-5">
-                                                                                                                                <i class="fas fa-exclamation-triangle fa-3x mb-3"></i>
-                                                                                                                                <h4>Gagal memuat file Excel</h4>
-                                                                                                                                <p>${err.message}</p>
-                                                                                                                                <a href="${url}" class="btn btn-primary mt-2" download>Unduh File</a>
-                                                                                                                            </div>
-                                                                                                                        `);
+                                                                                                                                                    <div class="text-center text-danger p-5">
+                                                                                                                                                        <i class="fas fa-exclamation-triangle fa-3x mb-3"></i>
+                                                                                                                                                        <h4>Gagal memuat file Excel</h4>
+                                                                                                                                                        <p>${err.message}</p>
+                                                                                                                                                        <a href="${url}" class="btn btn-primary mt-2" download>Unduh File</a>
+                                                                                                                                                    </div>
+                                                                                                                                                `);
                         });
 
                 } else {
                     content = `
-                                                                                                                                                            <div class="text-center text-white p-5">
-                                                                                                                                                                <i class="fas fa-file-download fa-5x mb-4 text-muted"></i>
-                                                                                                                                                                <h4>Pratinjau tidak tersedia</h4>
-                                                                                                                                                                <p class="mb-4">Tipe file ini tidak dapat ditampilkan pratinjau secara langsung.</p>
-                                                                                                                                                                <a href="${url}" class="btn btn-primary" download>
-                                                                                                                                                                    <i class="fas fa-download mr-1"></i> Unduh File
-                                                                                                                                                                </a>
-                                                                                                                                                            </div>
-                                                                                                                                                        `;
+                                                                                                                                                                                    <div class="text-center text-white p-5">
+                                                                                                                                                                                        <i class="fas fa-file-download fa-5x mb-4 text-muted"></i>
+                                                                                                                                                                                        <h4>Pratinjau tidak tersedia</h4>
+                                                                                                                                                                                        <p class="mb-4">Tipe file ini tidak dapat ditampilkan pratinjau secara langsung.</p>
+                                                                                                                                                                                        <a href="${url}" class="btn btn-primary" download>
+                                                                                                                                                                                            <i class="fas fa-download mr-1"></i> Unduh File
+                                                                                                                                                                                        </a>
+                                                                                                                                                                                    </div>
+                                                                                                                                                                                `;
                 }
 
                 container.html(content);
@@ -634,14 +772,14 @@
                                 }).text().trim();
 
                                 nameCell.html(`
-                                                                                                                                                    ${itemName}
-                                                                                                                                                    <br>
-                                                                                                                                                    <small class="text-muted">
-                                                                                                                                                        <i class="fas fa-user"></i> ${response.checked_by}
-                                                                                                                                                        <br>
-                                                                                                                                                        <i class="fas fa-clock"></i> ${response.checked_at}
-                                                                                                                                                    </small>
-                                                                                                                                                `);
+                                                                                                                                                                            ${itemName}
+                                                                                                                                                                            <br>
+                                                                                                                                                                            <small class="text-muted">
+                                                                                                                                                                                <i class="fas fa-user"></i> ${response.checked_by}
+                                                                                                                                                                                <br>
+                                                                                                                                                                                <i class="fas fa-clock"></i> ${response.checked_at}
+                                                                                                                                                                            </small>
+                                                                                                                                                                        `);
                             } else {
                                 button.removeClass('btn-success').addClass('btn-default');
                                 button.find('i').hide();
@@ -750,9 +888,9 @@
                 const totalItems = {{ $procurement->items->count() }};
                 const checkedItems = $('.toggle-check-btn.btn-success').length;
                 $('.badge.badge-info').html(`
-                                                                                                                                                                        <i class="fas fa-clipboard-check"></i>
-                                                                                                                                                                        ${checkedItems} / ${totalItems} Diperiksa
-                                                                                                                                                                    `);
+                                                                                                                                                                                                <i class="fas fa-clipboard-check"></i>
+                                                                                                                                                                                                ${checkedItems} / ${totalItems} Diperiksa
+                                                                                                                                                                                            `);
             }
         });
     </script>
