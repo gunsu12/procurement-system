@@ -33,6 +33,11 @@ class ProcurementPolicy
             return true;
         }
 
+        // Purchasing in holding company can view all
+        if ($user->role === 'purchasing' && $user->company && $user->company->is_holding) {
+            return true;
+        }
+
         // Manager can view requests from any company as long as they are the unit approver
         if ($user->role === 'manager') {
             $unit = $procurement->unit;

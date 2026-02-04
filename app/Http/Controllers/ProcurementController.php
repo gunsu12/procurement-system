@@ -26,13 +26,14 @@ class ProcurementController extends Controller
 
         // Isolation logic based on Company
         $holdingRoles = ['finance_manager_holding', 'finance_director_holding', 'general_director_holding', 'super_admin'];
+        $isPurchasingHolding = ($user->role === 'purchasing' && $user->company && $user->company->is_holding);
 
         // Manager can see requests from any company as long as they are the unit approver
         if ($user->role === 'manager') {
             $query->whereHas('unit', function ($q) use ($user) {
                 $q->where('approval_by', $user->id);
             });
-        } elseif (!in_array($user->role, $holdingRoles)) {
+        } elseif (!in_array($user->role, $holdingRoles) && !$isPurchasingHolding) {
             // Non-holding roles (except manager) only see their own company
             $query->where('company_id', $user->company_id);
 
@@ -67,7 +68,7 @@ class ProcurementController extends Controller
         }
 
         // Filter by company (for holding roles)
-        if ($request->filled('company_id') && in_array($user->role, $holdingRoles)) {
+        if ($request->filled('company_id') && (in_array($user->role, $holdingRoles) || $isPurchasingHolding)) {
             $query->where('company_id', $request->company_id);
         }
 
@@ -111,7 +112,7 @@ class ProcurementController extends Controller
         ];
 
         // Pass selection data for filters
-        if (in_array($user->role, $holdingRoles)) {
+        if (in_array($user->role, $holdingRoles) || $isPurchasingHolding) {
             $units = \App\Models\Unit::with('company')->get();
             $companies = \App\Models\Company::all();
         } else {
@@ -344,7 +345,7 @@ class ProcurementController extends Controller
         if ($nextStatus === 'completed') {
             $uncheckedItems = $procurement->items()->where('is_checked', false)->count();
             if ($uncheckedItems > 0) {
-                return back()->with('error', "Cannot complete request. There are still $uncheckedItems unchecked items.");
+                return back()->with('error', "Permintaan tidak dapat diselesaikan. Masih ada $uncheckedItems item yang belum diperiksa.");
             }
         }
 
