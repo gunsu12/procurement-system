@@ -109,15 +109,23 @@ class PurchaseReportController extends Controller
                 });
                 $approveDate = $log ? $log->created_at->format('Y-m-d H:i') : '-';
 
+                // Helper to sanitize CSV injection
+                $sanitize = function ($value) {
+                    if (is_string($value) && preg_match('/^[-+=@]/', $value)) {
+                        return "'" . $value;
+                    }
+                    return $value;
+                };
+
                 $row = [
-                    $req->code,
+                    $sanitize($req->code),
                     $req->created_at->format('Y-m-d'),
                     $approveDate,
-                    $req->unit->name ?? '-',
-                    $item->name,
-                    $item->specification,
+                    $sanitize($req->unit->name ?? '-'),
+                    $sanitize($item->name),
+                    $sanitize($item->specification),
                     $item->quantity,
-                    $item->unit,
+                    $sanitize($item->unit),
                     $item->estimated_price,
                     $item->is_checked ? 'Sudah Beli' : 'Belum Beli'
                 ];

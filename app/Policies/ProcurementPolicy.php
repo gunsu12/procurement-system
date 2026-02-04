@@ -75,7 +75,7 @@ class ProcurementPolicy
         }
 
         // Check if user's role can approve the current status
-        $nextStatus = $this->getNextStatus($procurement->status, $user->role, $procurement->request_type, $procurement->total_amount);
+        $nextStatus = ProcurementRequest::getNextStatus($procurement->status, $user->role, $procurement->request_type, $procurement->total_amount);
         return $nextStatus !== null;
     }
 
@@ -84,6 +84,11 @@ class ProcurementPolicy
      */
     public function reject(User $user, ProcurementRequest $procurement)
     {
+        // Scope Check: User must be able to view the request first (handles company/unit logic)
+        if (!$this->view($user, $procurement)) {
+            return false;
+        }
+
         // For now, any authenticated user with appropriate role can reject
         // You may want to add more specific logic here
         $approverRoles = [
@@ -162,36 +167,5 @@ class ProcurementPolicy
         return $procurement->user_id === $user->id && $procurement->status === 'submitted';
     }
 
-    /**
-     * Get the next status for approval workflow.
-     * This is a helper method to maintain consistency with controller logic.
-     */
-    private function getNextStatus($currentStatus, $role, $requestType, $totalAmount)
-    {
-        $fullChain = [
-            'submitted' => ['manager' => 'approved_by_manager'],
-            'approved_by_manager' => ['budgeting' => 'approved_by_budgeting'],
-            'approved_by_budgeting' => ['director_company' => 'approved_by_dir_company'],
-            'approved_by_dir_company' => ['finance_manager_holding' => 'approved_by_fin_mgr_holding'],
-            'approved_by_fin_mgr_holding' => ['finance_director_holding' => 'approved_by_fin_dir_holding'],
-            'approved_by_fin_dir_holding' => ['general_director_holding' => 'approved_by_gen_dir_holding'],
-            'approved_by_gen_dir_holding' => ['purchasing' => 'processing'],
-            'processing' => ['purchasing' => 'completed'],
-        ];
 
-        $shortChain = [
-            'submitted' => ['manager' => 'approved_by_manager'],
-            'approved_by_manager' => ['budgeting' => 'approved_by_budgeting'],
-            'approved_by_budgeting' => ['purchasing' => 'processing'],
-            'processing' => ['purchasing' => 'completed'],
-        ];
-
-        $map = $fullChain; // Default to full
-
-        if ($requestType === 'nonaset' && $totalAmount < 1000000) {
-            $map = $shortChain;
-        }
-
-        return $map[$currentStatus][$role] ?? null;
-    }
 }

@@ -133,14 +133,23 @@ class PurchaseOutstandingReportController extends Controller
                     </tr>
                   </thead>";
             echo "<tbody>";
+
+            // Helper to sanitize Excel injection
+            $sanitize = function ($value) {
+                if (is_string($value) && preg_match('/^[-+=@]/', $value)) {
+                    return "'" . $value;
+                }
+                return $value;
+            };
+
             foreach ($data as $row) {
                 echo "<tr>";
-                echo "<td>{$row['code']}</td>";
+                echo "<td>" . $sanitize($row['code']) . "</td>";
                 echo "<td>{$row['created_at']}</td>";
-                echo "<td>{$row['unit']}</td>";
+                echo "<td>" . $sanitize($row['unit']) . "</td>";
                 echo "<td>{$row['category']}</td>";
-                echo "<td>{$row['item_name']}</td>";
-                echo "<td>{$row['item_spec']}</td>";
+                echo "<td>" . $sanitize($row['item_name']) . "</td>";
+                echo "<td>" . $sanitize($row['item_spec']) . "</td>";
                 echo "<td>{$row['processed_at']}</td>";
                 echo "<td>{$row['outstanding_days']}</td>";
                 echo "</tr>";

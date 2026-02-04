@@ -115,4 +115,41 @@ class ProcurementRequest extends Model
             ->logFillable()
             ->logOnlyDirty();
     }
+
+    /**
+     * Get the next status for approval workflow.
+     * Centralized logic used by both Controller and Policy.
+     */
+    public static function getNextStatus($currentStatus, $role, $requestType, $totalAmount)
+    {
+        $fullChain = [
+            'submitted' => ['manager' => 'approved_by_manager'],
+            'approved_by_manager' => ['budgeting' => 'approved_by_budgeting'],
+            'approved_by_budgeting' => ['director_company' => 'approved_by_dir_company'],
+            'approved_by_dir_company' => ['finance_manager_holding' => 'approved_by_fin_mgr_holding'],
+            'approved_by_fin_mgr_holding' => ['finance_director_holding' => 'approved_by_fin_dir_holding'],
+            'approved_by_fin_dir_holding' => ['general_director_holding' => 'approved_by_gen_dir_holding'],
+            'approved_by_gen_dir_holding' => ['purchasing' => 'processing'],
+            'processing' => ['purchasing' => 'completed'],
+        ];
+
+        $shortChain = [
+            'submitted' => ['manager' => 'approved_by_manager'],
+            'approved_by_manager' => ['budgeting' => 'approved_by_budgeting'],
+            'approved_by_budgeting' => ['purchasing' => 'processing'],
+            'processing' => ['purchasing' => 'completed'],
+        ];
+
+        // Logic Re-defined (03 Feb 2026) based on Controller logic:
+        // Non-Asset > 1,000,000 -> Short Chain
+        // All others -> Full Chain
+
+        $map = $fullChain; // Default to full
+
+        if ($requestType === 'nonaset' && $totalAmount > 1000000) {
+            $map = $shortChain;
+        }
+
+        return $map[$currentStatus][$role] ?? null;
+    }
 }
