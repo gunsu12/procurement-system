@@ -91,7 +91,17 @@ RUN install-php-extensions \
     gd \
     zip \
     opcache \
+    opcache \
     intl
+
+# Install Supervisor and Cron
+RUN apt-get update && apt-get install -y \
+    supervisor \
+    cron \
+    && rm -rf /var/lib/apt/lists/*
+    
+# Copy Supervisor Config
+COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 # Configure PHP for Production
 RUN { \

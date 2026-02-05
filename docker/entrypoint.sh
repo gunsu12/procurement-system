@@ -58,8 +58,8 @@ fi
 # If strictly container internal, this is fine.
 chown -R www-data:www-data /app/storage /app/bootstrap/cache /app/public
 
-# Start FrankenPHP
-echo "Starting FrankenPHP..."
-exec frankenphp run --config /etc/caddy/Caddyfile
+# Start Supervisor (which manages FrankenPHP and Scheduler)
+echo "Starting Supervisor..."
+exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf
 
 
