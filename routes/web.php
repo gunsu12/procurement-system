@@ -17,7 +17,6 @@ Route::get('/', function () {
     return Auth::check() ? redirect()->route('home') : redirect()->route('login');
 });
 
-
 /*
 |--------------------------------------------------------------------------
 | SSO Authentication Routes
