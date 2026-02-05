@@ -108,7 +108,8 @@ class ProcurementController extends Controller
             'approved_by_gen_dir_holding',
             'processing',
             'completed',
-            'rejected'
+            'rejected',
+            'cancelled'
         ];
 
         // Pass selection data for filters
@@ -383,6 +384,26 @@ class ProcurementController extends Controller
         });
 
         return back()->with('success', 'Request rejected.');
+    }
+
+    public function cancel(Request $request, ProcurementRequest $procurement)
+    {
+        $this->authorize('cancel', $procurement);
+
+        DB::transaction(function () use ($procurement, $request) {
+            $oldStatus = $procurement->status;
+            $procurement->update(['status' => 'cancelled']);
+
+            $procurement->logs()->create([
+                'user_id' => Auth::id(),
+                'action' => 'cancelled',
+                'note' => 'Canceled by user',
+                'status_before' => $oldStatus,
+                'status_after' => 'cancelled',
+            ]);
+        });
+
+        return back()->with('success', 'Request cancelled successfully.');
     }
 
 

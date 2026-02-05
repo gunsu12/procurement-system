@@ -17,6 +17,9 @@ class ProcurementPolicy
     public function before(User $user, $ability)
     {
         if ($user->role === 'super_admin') {
+            if ($ability === 'cancel') {
+                return null;
+            }
             return true;
         }
     }
@@ -172,5 +175,12 @@ class ProcurementPolicy
         return $procurement->user_id === $user->id && $procurement->status === 'submitted';
     }
 
-
+    /**
+     * Determine if the user can cancel the procurement request.
+     */
+    public function cancel(User $user, ProcurementRequest $procurement)
+    {
+        // Only owner can cancel, and only if status is submitted or draft
+        return $procurement->user_id === $user->id && in_array($procurement->status, ['draft', 'submitted']);
+    }
 }
