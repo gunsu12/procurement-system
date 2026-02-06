@@ -59,10 +59,8 @@
                             <div class="mt-2" id="password-requirements">
                                 <small class="text-muted d-block mb-1">Syarat Kata Sandi:</small>
                                 <ul class="list-unstyled text-sm mb-0" style="font-size: 0.9rem;">
-                                    <li id="req-length" class="text-muted"><i class="fas fa-circle fa-xs mr-1"></i> Minimal 8 karakter</li>
-                                    <li id="req-uppercase" class="text-muted"><i class="fas fa-circle fa-xs mr-1"></i> Huruf besar & kecil</li>
-                                    <li id="req-number" class="text-muted"><i class="fas fa-circle fa-xs mr-1"></i> Minimal 1 angka</li>
-                                    <li id="req-symbol" class="text-muted"><i class="fas fa-circle fa-xs mr-1"></i> Minimal 1 simbol</li>
+                                    <li id="req-length" class="text-muted"><i class="fas fa-circle fa-xs mr-1"></i>
+                                        Minimal 6 karakter</li>
                                 </ul>
                             </div>
                         </div>
@@ -92,55 +90,48 @@
 @stop
 
 @section('adminlte_js')
-    <script>
-        $(document).ready(function() {
-            var $passwordInput = $('#password');
-            
-            // Check initial state (e.g. if browser auto-fills)
-            checkPassword($passwordInput.val());
+<script>
+    $(document).ready(function () {
+        var $passwordInput = $('#password');
 
-            $passwordInput.on('input propertychange', function() {
-                checkPassword($(this).val());
-            });
+        // Check initial state (e.g. if browser auto-fills)
+        checkPassword($passwordInput.val());
 
-            function checkPassword(password) {
-                // Validation Logic
-                var hasLength = password.length >= 8;
-                var hasUpper = /[A-Z]/.test(password);
-                var hasLower = /[a-z]/.test(password);
-                var hasNumber = /[0-9]/.test(password);
-                var hasSymbol = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+        $passwordInput.on('input propertychange', function () {
+            checkPassword($(this).val());
+        });
 
-                // Update UI
-                updateRequirement('#req-length', hasLength);
-                updateRequirement('#req-uppercase', hasUpper && hasLower);
-                updateRequirement('#req-number', hasNumber);
-                updateRequirement('#req-symbol', hasSymbol);
-            }
+        function checkPassword(password) {
+            // Validation Logic
+            var hasLength = password.length >= 6;
 
-            function updateRequirement(selector, isValid) {
-                var $el = $(selector);
-                var $icon = $el.find('i');
+            // Update UI
+            updateRequirement('#req-length', hasLength);
+        }
 
-                if (isValid) {
-                    $el.removeClass('text-muted text-danger').addClass('text-success');
-                    $icon.removeClass('fa-circle fa-times').addClass('fa-check');
+        function updateRequirement(selector, isValid) {
+            var $el = $(selector);
+            var $icon = $el.find('i');
+
+            if (isValid) {
+                $el.removeClass('text-muted text-danger').addClass('text-success');
+                $icon.removeClass('fa-circle fa-times').addClass('fa-check');
+            } else {
+                // Only show danger if input is not empty, otherwise keep muted (neutral)
+                // But usually user wants to know what is missing.
+                // Let's stick to: neutral if empty? No, request wants "early warning".
+                // If empty, probably keep neutral. If user types, show success/fail.
+
+                if ($('#password').val().length === 0) {
+                    $el.removeClass('text-success text-danger').addClass('text-muted');
+                    $icon.removeClass('fa-check fa-times').addClass('fa-circle');
                 } else {
-                    // Only show danger if input is not empty, otherwise keep muted (neutral)
-                    // But usually user wants to know what is missing.
-                    // Let's stick to: neutral if empty? No, request wants "early warning".
-                    // If empty, probably keep neutral. If user types, show success/fail.
-                    
-                    if ($('#password').val().length === 0) {
-                        $el.removeClass('text-success text-danger').addClass('text-muted');
-                        $icon.removeClass('fa-check fa-times').addClass('fa-circle');
-                    } else {
-                        $el.removeClass('text-success text-muted').addClass('text-danger');
-                        $icon.removeClass('fa-check fa-circle').addClass('fa-times');
-                    }
+                    $el.removeClass('text-success text-muted').addClass('text-danger');
+                    $icon.removeClass('fa-check fa-circle').addClass('fa-times');
                 }
             }
-        });
-    </script>
-    @yield('js')
+        }
+    });
+</script>
+@yield('js')
 @stop
