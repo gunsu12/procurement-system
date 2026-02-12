@@ -130,10 +130,14 @@
                         @foreach ($requests as $req)
                             <tr class="{{ $req->is_cito ? 'table-warning' : '' }}">
                                 <td>
-                                    {{ $req->code }}
+                                    {{ $req->code }} <br>
                                     @if($req->is_cito)
                                         <span class="badge badge-danger">CITO</span>
                                     @endif
+                                    @if($req->is_medical)
+                                        <span class="badge badge-warning">Medical</span>
+                                    @endif
+                                        <span class="badge badge-info">{{ ucfirst($req->request_type) }}</span>
                                 </td>
                                 <td>{{ $req->created_at->format('Y-m-d') }}</td>
                                 <td>{{ $req->company->name ?? '-' }}</td>
@@ -188,7 +192,10 @@
                             <p class="mb-1"><strong>Unit:</strong> {{ $req->unit->name }}</p>
                             <p class="mb-1"><strong>Pemohon:</strong> {{ $req->user->name }}</p>
                             <p class="mb-1"><strong>Perusahaan:</strong> {{ $req->company->name ?? '-' }}</p>
-                            
+                            @if($req->is_medical)
+                                <span class="badge badge-warning">Medical</span>
+                            @endif
+                            <span class="badge badge-info">{{ ucfirst($req->request_type) }}</span>
                             <div class="d-flex justify-content-between align-items-center mt-3">
                                 <strong>Rp {{ number_format($req->total_amount, 2, ',', '.') }}</strong>
                                 @php

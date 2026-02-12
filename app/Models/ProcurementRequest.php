@@ -146,7 +146,7 @@ class ProcurementRequest extends Model
 
         $map = $fullChain; // Default to full
 
-        if ($requestType === 'nonaset' && $totalAmount > 1000000) {
+        if ($requestType === 'nonaset') {
             $map = $shortChain;
         }
 

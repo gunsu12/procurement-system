@@ -79,7 +79,7 @@ class ProcurementPolicy
         // Manager can approve requests from any company as long as they are the approver
         if ($user->role === 'manager') {
             $unit = $procurement->unit;
-            if (! $unit || $unit->approval_by !== $user->id) {
+            if (!$unit || $unit->approval_by !== $user->id) {
                 return false;
             }
         }
@@ -96,7 +96,7 @@ class ProcurementPolicy
     public function reject(User $user, ProcurementRequest $procurement)
     {
         // Scope Check: User must be able to view the request first (handles company/unit logic)
-        if (! $this->view($user, $procurement)) {
+        if (!$this->view($user, $procurement)) {
             return false;
         }
 
@@ -109,6 +109,7 @@ class ProcurementPolicy
             'finance_manager_holding',
             'finance_director_holding',
             'general_director_holding',
+            'purchasing',
         ];
 
         return in_array($user->role, $approverRoles);
@@ -133,7 +134,7 @@ class ProcurementPolicy
 
         // Manager must be the approver of the unit
         $unit = $procurement->unit;
-        if (! $unit || $unit->approval_by !== $user->id) {
+        if (!$unit || $unit->approval_by !== $user->id) {
             return false;
         }
 
