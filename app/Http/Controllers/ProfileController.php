@@ -56,11 +56,18 @@ class ProfileController extends Controller
 
     public function showFirstLoginChangePassword()
     {
+        if (!Auth::user()->is_first_login) {
+            return redirect()->route('home');
+        }
         return view('auth.first-login');
     }
 
     public function updateFirstLoginPassword(Request $request)
     {
+        if (!Auth::user()->is_first_login) {
+            return redirect()->route('home');
+        }
+
         $request->validate([
             'current_password' => ['required', 'current_password'],
             'password' => ['required', 'confirmed', 'min:6'],
