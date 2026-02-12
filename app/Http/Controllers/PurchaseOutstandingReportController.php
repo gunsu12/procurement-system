@@ -126,8 +126,8 @@ class PurchaseOutstandingReportController extends Controller
                         <th>Tanggal Pengajuan</th>
                         <th>Unit</th>
                         <th>Medis/Non Medis</th>
-                        <th>Item Name</th>
-                        <th>Item Spesifikasi</th>
+                        <th>Nama Barang</th>
+                        <th>Spesifikasi Barang</th>
                         <th>Tanggal Di Proses</th>
                         <th>Usia Outstanding (Hari)</th>
                     </tr>

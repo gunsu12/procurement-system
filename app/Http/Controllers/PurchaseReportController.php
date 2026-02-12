@@ -85,12 +85,12 @@ class PurchaseReportController extends Controller
             'Tanggal Pengajuan',
             'Tanggal Approve Budgeting',
             'Unit Pemohon',
-            'Item Name',
-            'Item Spec',
-            'Qty',
-            'Unit',
-            'Budget',
-            'Status' // Check/Unchecked
+            'Nama Barang',
+            'Spesifikasi',
+            'Jumlah',
+            'Satuan',
+            'Estimasi Budget',
+            'Status' // Checked/Unchecked
         ];
 
         $callback = function () use ($items, $headers) {

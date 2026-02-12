@@ -347,14 +347,19 @@ return [
                     'icon' => 'fas fa-fw fa-building',
                 ],
                 [
-                    'text' => 'Aging Outstanding',
-                    'route' => 'reports.outstanding',
-                    'icon' => 'fas fa-fw fa-clock',
+                    'text' => 'Timeline',
+                    'route' => 'reports.timeline',
+                    'icon' => 'fas fa-fw fa-stream',
                 ],
                 [
                     'text' => 'Riwayat Pembelian',
                     'route' => 'reports.purchase',
                     'icon' => 'fas fa-fw fa-shopping-cart',
+                ],
+                [
+                    'text' => 'Outstanding Permintaan',
+                    'route' => 'reports.outstanding',
+                    'icon' => 'fas fa-fw fa-clock',
                 ],
                 [
                     'text' => 'Outstanding Pembelian',

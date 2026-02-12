@@ -1,6 +1,6 @@
 @extends('adminlte::page')
 
-@section('title', 'Purchase Outstanding Report')
+@section('title', 'Laporan Purchase Outstanding')
 
 @section('content_header')
 <h1>Laporan Purchase Outstanding</h1>
@@ -31,9 +31,9 @@
                         <label>Tipe Permintaan</label>
                         <select name="request_type" class="form-control">
                             <option value="">Semua</option>
-                            <option value="asset" {{ request('request_type') == 'asset' ? 'selected' : '' }}>Asset
+                            <option value="asset" {{ request('request_type') == 'asset' ? 'selected' : '' }}>Aset
                             </option>
-                            <option value="nonaset" {{ request('request_type') == 'nonaset' ? 'selected' : '' }}>Non-Asset
+                            <option value="nonaset" {{ request('request_type') == 'nonaset' ? 'selected' : '' }}>Non Aset
                             </option>
                         </select>
                     </div>
@@ -76,7 +76,7 @@
                 <div class="col-md-6 d-flex align-items-end">
                     <div class="form-group">
                         <button type="submit" name="preview" value="1" class="btn btn-primary">
-                            <i class="fas fa-search"></i> Preview
+                            <i class="fas fa-search"></i> Tampilkan
                         </button>
                         <button type="submit" name="export" value="1" class="btn btn-success ml-2">
                             <i class="fas fa-file-excel"></i> Export Excel
@@ -103,7 +103,7 @@
                         <th>Tanggal Pengajuan</th>
                         <th>Unit</th>
                         <th>Kategori</th>
-                        <th>Item Name</th>
+                        <th>Nama Barang</th>
                         <th>Spesifikasi</th>
                         <th>Tgl Proses</th>
                         <th>Outstanding (Hari)</th>

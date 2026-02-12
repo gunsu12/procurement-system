@@ -1,14 +1,14 @@
 @extends('adminlte::page')
 
-@section('title', 'Reports Overview')
+@section('title', 'Ringkasan Laporan')
 
 @section('content_header')
 <div class="d-flex justify-content-between align-items-center">
-    <h1><i class="fas fa-chart-pie mr-2 text-primary"></i>Reports Overview</h1>
+    <h1><i class="fas fa-chart-pie mr-2 text-primary"></i>Ringkasan Laporan</h1>
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="{{ route('home') }}">Home</a></li>
-            <li class="breadcrumb-item active">Reports</li>
+            <li class="breadcrumb-item"><a href="{{ route('home') }}">Beranda</a></li>
+            <li class="breadcrumb-item active">Laporan</li>
         </ol>
     </nav>
 </div>
@@ -19,7 +19,7 @@
     <!-- Procurement Section -->
     <div class="col-12 mt-3">
         <h5 class="mb-3 text-muted border-bottom pb-2">
-            <i class="fas fa-file-invoice mr-2"></i>Procurement Reports
+            <i class="fas fa-file-invoice mr-2"></i>Laporan Pengadaan
         </h5>
     </div>
 
@@ -31,12 +31,12 @@
                     <div class="rounded-circle bg-primary p-3 mr-3 shadow-sm">
                         <i class="fas fa-building fa-2x text-white"></i>
                     </div>
-                    <h5 class="card-title font-weight-bold mb-0">Request Summary per Unit</h5>
+                    <h5 class="card-title font-weight-bold mb-0">Ringkasan Permintaan per Unit</h5>
                 </div>
-                <p class="card-text text-muted">Summary and details of procurement requests filtered by company and
-                    unit.</p>
+                <p class="card-text text-muted">Ringkasan dan detail permintaan pengadaan yang difilter berdasarkan
+                    perusahaan dan unit.</p>
                 <a href="{{ route('reports.unit') }}" class="btn btn-primary btn-block rounded-pill">
-                    View Report <i class="fas fa-arrow-right ml-1"></i>
+                    Lihat Laporan <i class="fas fa-arrow-right ml-1"></i>
                 </a>
             </div>
         </div>
@@ -50,13 +50,13 @@
                     <div class="rounded-circle bg-warning p-3 mr-3 shadow-sm">
                         <i class="fas fa-hourglass-half fa-2x text-white"></i>
                     </div>
-                    <h5 class="card-title font-weight-bold mb-0">Outstanding Aging</h5>
+                    <h5 class="card-title font-weight-bold mb-0">Outstanding Permintaan</h5>
                 </div>
-                <p class="card-text text-muted">Analysis of procurement requests that have been pending for more than 7
-                    days.</p>
+                <p class="card-text text-muted">Analisis permintaan pengadaan yang tertunda selama lebih dari 7 hari.
+                </p>
                 <a href="{{ route('reports.outstanding') }}"
                     class="btn btn-warning btn-block rounded-pill text-white font-weight-bold">
-                    View Report <i class="fas fa-arrow-right ml-1"></i>
+                    Lihat Laporan <i class="fas fa-arrow-right ml-1"></i>
                 </a>
             </div>
         </div>
@@ -70,12 +70,11 @@
                     <div class="rounded-circle bg-info p-3 mr-3 shadow-sm">
                         <i class="fas fa-history fa-2x text-white"></i>
                     </div>
-                    <h5 class="card-title font-weight-bold mb-0">Timeline Analysis</h5>
+                    <h5 class="card-title font-weight-bold mb-0">Analisis Linimasa</h5>
                 </div>
-                <p class="card-text text-muted">Detailed breakdown of approval duration and potential process
-                    bottlenecks.</p>
+                <p class="card-text text-muted">Rincian detail durasi persetujuan dan potensi hambatan proses.</p>
                 <a href="{{ route('reports.timeline') }}" class="btn btn-info btn-block rounded-pill">
-                    View Report <i class="fas fa-arrow-right ml-1"></i>
+                    Lihat Laporan <i class="fas fa-arrow-right ml-1"></i>
                 </a>
             </div>
         </div>
@@ -84,7 +83,7 @@
     <!-- Purchasing Section -->
     <div class="col-12 mt-5">
         <h5 class="mb-3 text-muted border-bottom pb-2">
-            <i class="fas fa-shopping-cart mr-2"></i>Purchasing Reports
+            <i class="fas fa-shopping-cart mr-2"></i>Laporan Pembelian
         </h5>
     </div>
 
@@ -96,12 +95,12 @@
                     <div class="rounded-circle bg-success p-3 mr-3 shadow-sm">
                         <i class="fas fa-poll-h fa-2x text-white"></i>
                     </div>
-                    <h5 class="card-title font-weight-bold mb-0">Purchase History</h5>
+                    <h5 class="card-title font-weight-bold mb-0">Riwayat Pembelian</h5>
                 </div>
-                <p class="card-text text-muted">Comprehensive list of items purchased and their budgetary approval
-                    status.</p>
+                <p class="card-text text-muted">Daftar lengkap barang yang dibeli dan status persetujuan anggarannya.
+                </p>
                 <a href="{{ route('reports.purchase') }}" class="btn btn-success btn-block rounded-pill">
-                    View Report <i class="fas fa-arrow-right ml-1"></i>
+                    Lihat Laporan <i class="fas fa-arrow-right ml-1"></i>
                 </a>
             </div>
         </div>
@@ -115,13 +114,13 @@
                     <div class="rounded-circle bg-danger p-3 mr-3 shadow-sm">
                         <i class="fas fa-exclamation-triangle fa-2x text-white"></i>
                     </div>
-                    <h5 class="card-title font-weight-bold mb-0">Purchase Outstanding</h5>
+                    <h5 class="card-title font-weight-bold mb-0">Outstanding Pembelian</h5>
                 </div>
-                <p class="card-text text-muted">List of individual items processed by purchasing but not yet acquired.
-                </p>
+                <p class="card-text text-muted">Daftar item individu yang diproses oleh purchasing tetapi belum
+                    diperoleh/dibeli.</p>
                 <a href="{{ route('reports.purchase-outstanding.index') }}"
                     class="btn btn-danger btn-block rounded-pill">
-                    View Report <i class="fas fa-arrow-right ml-1"></i>
+                    Lihat Laporan <i class="fas fa-arrow-right ml-1"></i>
                 </a>
             </div>
         </div>

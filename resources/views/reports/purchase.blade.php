@@ -81,11 +81,11 @@
                             <th>Tanggal Pengajuan</th>
                             <th>Tgl Approve Budgeting</th>
                             <th>Unit Pemohon</th>
-                            <th>Item Name</th>
-                            <th>Item Spec</th>
-                            <th>Qty</th>
+                            <th>Nama Barang</th>
+                            <th>Spesifikasi</th>
+                            <th>Jml</th>
                             <th>Satuan</th>
-                            <th>Budget (Est.)</th>
+                            <th>Estimasi Budget</th>
                             <th>Status Beli</th>
                         </tr>
                     </thead>
@@ -100,7 +100,8 @@
                             @endphp
                             <tr>
                                 <td>
-                                    <a href="{{ route('procurement.show', $req->hashid) }}" target="_blank">
+                                    <a href="{{ route('procurement.show', $req->hashid) }}?back_url={{ urlencode(request()->fullUrl()) }}"
+                                        target="_blank">
                                         {{ $req->code }}
                                     </a>
                                 </td>

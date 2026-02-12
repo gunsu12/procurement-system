@@ -5,8 +5,10 @@
 @section('content_header')
 <div class="d-flex justify-content-between">
     <h1>Detail Permohonan: {{ $procurement->code }}</h1>
-    <a href="{{ url()->previous() == url()->current() ? route('procurement.index') : url()->previous() }}"
-        class="btn btn-secondary">
+    @php
+        $backUrl = request('back_url') ? urldecode(request('back_url')) : (url()->previous() == url()->current() ? route('procurement.index') : url()->previous());
+    @endphp
+    <a href="{{ $backUrl }}" class="btn btn-secondary">
         <i class="fas fa-arrow-left"></i> Kembali
     </a>
 </div>
