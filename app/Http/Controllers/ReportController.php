@@ -32,7 +32,7 @@ class ReportController extends Controller
                 $approvedUnitIds = \App\Models\Unit::where('approval_by', $user->id)->pluck('id')->toArray();
                 if ($unitId && in_array($unitId, $approvedUnitIds)) {
                     // If specific unit requested and manager is approver, use it
-                    $unitId = $unitId;
+                    // Unit ID is valid and approved by manager, proceed with it
                 } elseif (!$unitId) {
                     // If no specific unit, show all units where manager is approver
                     $query->whereIn('unit_id', $approvedUnitIds);

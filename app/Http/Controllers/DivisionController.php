@@ -21,7 +21,7 @@ class DivisionController extends Controller
             $query->where('company_id', $request->company_id);
         }
 
-        $divisions = $query->paginate(10)->withQueryString();
+        $divisions = $query->paginate(10)->appends($request->query());
         $companies = \App\Models\Company::all();
         return view('divisions.index', compact('divisions', 'companies'));
     }
