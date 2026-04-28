@@ -18,6 +18,46 @@
 
 @section('content')
 <div class="container-fluid">
+    @if(session('error'))
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle mr-2"></i>{{ session('error') }}
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    @endif
+
+    @if(session('warning'))
+        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-triangle mr-2"></i>{{ session('warning') }}
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    @endif
+
+    @if(session('success'))
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle mr-2"></i>{{ session('success') }}
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    @endif
+
+    @if($errors->any())
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <ul class="mb-0">
+                @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    @endif
+
     <div class="card">
         <div class="card-body">
             <form action="{{ route('procurement.update', $procurement->hashid) }}" method="POST" id="editForm"
@@ -36,11 +76,16 @@
                     <div class="col-md-6">
                         <div class="form-group mb-3">
                             <label>Tipe Permohonan <span class="text-danger">*</span></label>
-                            <select name="request_type" class="form-control" required>
+                            <select name="request_type" class="form-control @error('request_type') is-invalid @enderror" required>
                                 <option value="">-- Pilih Tipe --</option>
                                 <option value="aset" {{ old('request_type', $procurement->request_type) == 'aset' ? 'selected' : '' }}>Aset</option>
                                 <option value="nonaset" {{ old('request_type', $procurement->request_type) == 'nonaset' ? 'selected' : '' }}>Non Aset</option>
                             </select>
+                            @error('request_type')
+                                <span class="invalid-feedback" role="alert">
+                                    <strong>{{ $message }}</strong>
+                                </span>
+                            @enderror
                         </div>
                     </div>
                     <div class="col-md-6">
@@ -309,6 +354,22 @@
 @section('js')
 <script>
     $(document).ready(function () {
+        @if(session('error'))
+            toastr.error("{{ session('error') }}");
+        @endif
+        @if(session('success'))
+            toastr.success("{{ session('success') }}");
+        @endif
+        @if(session('warning'))
+            toastr.warning("{{ session('warning') }}");
+        @endif
+        @if($errors->any())
+            console.log('Validation errors detected:', {!! json_encode($errors->all()) !!});
+            @foreach($errors->all() as $error)
+                toastr.error("{!! addslashes($error) !!}");
+            @endforeach
+        @endif
+
         // Document Preview Handler
         $('.btn-view-document').on('click', function () {
             const btn = $(this);
@@ -497,6 +558,25 @@
             e.preventDefault();
             alert('Alasan CITO wajib diisi jika permohonan ditandai sebagai CITO!');
             $('#citoReason').focus();
+            return false;
+        }
+
+        let requestType = $('select[name="request_type"]').val();
+        let grandTotal = 0;
+        $('#itemsList .item-row').each(function () {
+            let qty = parseFloat($(this).find('.item-qty').val()) || 0;
+            let price = parseFloat($(this).find('.item-price').val()) || 0;
+            grandTotal += qty * price;
+        });
+
+        if (requestType === 'nonaset' && grandTotal < 1000000) {
+            e.preventDefault();
+            Swal.fire({
+                title: 'Peringatan',
+                text: 'Permintaan Non-Aset dibawah Rp 1.000.000 tidak perlu diajukan via sistem ini (langsung ke inventory).',
+                type: 'warning',
+                confirmButtonText: 'Mengerti'
+            });
             return false;
         }
 
